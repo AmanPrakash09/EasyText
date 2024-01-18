@@ -1,0 +1,177 @@
+/* General Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body, html {
+    font-family: 'Arial', sans-serif;
+    height: 100%;
+    background-color: #ecf0f1;
+}
+
+/* App View Layout */
+#app-view {
+    display: flex;
+    height: 100%;
+    flex-wrap: wrap;
+    margin: auto; /* Center the app-view by default */
+}
+
+/* Navigation Menu */
+#app-menu {
+    background-color: #2C3E50;
+    color: white;
+    list-style-type: none;
+    padding: 20px;
+    width: 250px; /* Fixed sidebar width */
+}
+
+.menu-item {
+    padding: 10px;
+    cursor: pointer;
+    border-bottom: 1px solid #34495E;
+}
+
+.menu-item a {
+    text-decoration: none;
+    color: white;
+    display: block;
+}
+
+/* Hover effect for menu items */
+.menu-item:hover {
+    background-color: #34495E;
+}
+
+/* Page Content */
+#page-view {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+/* Profile Page Styles */
+.profile-form {
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-field {
+    margin-bottom: 10px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.form-field input[type="text"],
+.form-field input[type="password"],
+.form-field input[type="file"],
+.form-field textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+/* Chat Page Styles */
+.message-list {
+    margin-bottom: 20px;
+}
+
+.message {
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #ecf0f1;
+    border-radius: 5px;
+    width: fit-content;
+    max-width: 70%;
+}
+
+.my-message {
+    background-color: #3498db;
+    color: white;
+    margin-left: auto;
+}
+
+.page-control {
+    display: flex;
+    justify-content: space-between;
+}
+
+.page-control textarea {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.page-control button {
+    width: 100px;
+}
+
+/* Button Styles */
+button {
+    padding: 10px 15px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Chat Room List Styles */
+.room-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.room-list li {
+    padding: 10px;
+    border-bottom: 1px solid #D6DBDF;
+    background-color: #FFFFFF; /* Original background color */
+    cursor: pointer;
+}
+
+.room-list li a {
+    text-decoration: none;
+    color: #2C3E50;
+    display: block;
+}
+
+/* Hover effect for room items */
+.room-list li:hover {
+    background-color: #D6EAF8; /* Example hover color */
+}
+
+/* Responsive Design */
+/* @media (max-width: 768px) {
+    #app-view {
+        flex-direction: column;
+    }
+
+    #app-menu {
+        width: 100%;
+    }
+
+    #page-view {
+        padding: 10px;
+    }
+} */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    #app-view {
+        width: 90%;
+    }
+}
+
+/* @media (min-width: 1024px) {
+    #app-view {
+        width: 80%;
+    }
+} */
