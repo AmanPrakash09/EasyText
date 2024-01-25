@@ -63,7 +63,7 @@ body, html {
 }
 
 .menu-item:hover a {
-    color: #FFC436; /* Change the text color to FF9800 when hovering */
+    color: #FFC436;
     background-color: #34495E;
 }
 
