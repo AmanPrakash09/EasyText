@@ -99,6 +99,15 @@ body, html {
     border: 1px solid #ccc;
 }
 
+.form-field textarea {
+    width: 100%; /* Full width */
+    padding: 10px; /* Padding for text area */
+    border: 1px solid #ccc; /* Border to match other inputs */
+    border-radius: 5px; /* Rounded corners for the text area */
+    height: 100px; /* Set a fixed height for the text area */
+    resize: vertical; /* Allow only vertical resizing */
+}
+
 /* --------------------------------Chat Styling-------------------------------- */
 .message-list {
     margin-bottom: 20px;
