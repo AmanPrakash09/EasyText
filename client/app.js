@@ -8,6 +8,10 @@ function createDOM(htmlString) {
     return template.content.firstChild;
 }
 
+let profile = {
+    username: "Alice"
+};
+
 class LobbyView {
     constructor(lobby) {
         this.elem = createDOM(`
@@ -38,7 +42,7 @@ class LobbyView {
             const newRoomName = this.inputElem.value.trim();
 
             this.lobby.addRoom(
-                newRoomName + "-id",
+                newRoomName,
                 newRoomName
             );
 
@@ -47,7 +51,7 @@ class LobbyView {
 
         this.lobby.onNewRoom = (room) => {
             const listItem = createDOM(`<li><a href="#/chat/${room.id}">${room.name}</a></li>`);
-    this.listElem.appendChild(listItem);
+            this.listElem.appendChild(listItem);
         };
     }
 
@@ -91,7 +95,55 @@ class ChatView {
         this.chatElem = this.elem.querySelector('.message-list');
         this.inputElem = this.elem.querySelector('.page-control-input');
         this.buttonElem = this.elem.querySelector('.page-control-btn');
+
+        this.room = null;
+
+        this.buttonElem.addEventListener('click', () => this.sendMessage());
+    
+        this.inputElem.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                this.sendMessage();
+            }
+        });
     }
+
+    sendMessage() {
+        const newMessage = this.inputElem.value.trim();
+
+        if (newMessage) {
+            this.room.addMessage(profile.username, newMessage);
+            this.inputElem.value = '';        
+        }
+    }
+
+    setRoom(room) {
+        console.log("Setting room:", room);
+
+        this.room = room;
+        this.titleElem.textContent = room.name;
+    
+        emptyDOM(this.chatElem);
+
+        console.log("Order of messages in room.messages:", room.messages);
+    
+        room.messages.forEach(message => {
+            console.log("Adding message to chat:", message);
+            this.addMessageToChat(message);
+        });
+    
+        this.room.onNewMessage = (message) => {
+            console.log("New message received:", message);
+            this.addMessageToChat(message);
+        };
+    }
+    
+    addMessageToChat(message) {
+        const messageElem = createDOM(`<div class="message${message.username === profile.username ? ' my-message' : ''}">
+            <span class="message-user">${message.username}:</span>
+            <span class="message-text">${message.text}</span>
+        </div>`);
+        this.chatElem.appendChild(messageElem);
+    }    
 }
 
 class ProfileView {
@@ -138,18 +190,24 @@ class Room {
             return;
         }
 
+        console.log(`Adding message to ${this.name} room:`, { username, text });
+
         const message = { username, text };
         this.messages.push(message);
+
+        if (this.onNewMessage) {
+            this.onNewMessage(message);
+        }
     }
 }
 
 class Lobby {
     constructor() {
         this.rooms = {
-            room1: new Room('room-1', 'Room 1'),
-            room2: new Room('room-2', 'Room 2'),
-            room3: new Room('room-3', 'Room 3'),
-            room4: new Room('room-4', 'Room 4'),
+            "room-1": new Room('room-1', 'Room 1'),
+            "room-2": new Room('room-2', 'Room 2'),
+            "room-3": new Room('room-3', 'Room 3'),
+            "room-4": new Room('room-4', 'Room 4'),
         };
         this.onNewRoom = null;
     }
@@ -190,7 +248,20 @@ function main() {
         if (path == "" || path === "/") {
             pageView.appendChild(lobbyView.elem);
         } else if (path.startsWith("/chat")) {
-            pageView.appendChild(chatView.elem);
+            console.log("Path before extracting room ID:", path);
+            const parts = path.split('/');
+            console.log("Parts array:", parts);
+            const roomId = parts[2];
+            console.log("Rooms in the lobby:", Object.keys(lobby.rooms));
+
+            const room = lobby.getRoom(roomId);
+
+            if (room) {
+                chatView.setRoom(room);
+                pageView.appendChild(chatView.elem);
+            } else {
+                console.error("Room not found");
+            }
         } else if (path === "/profile") {
             pageView.appendChild(profileView.elem);
         }

@@ -148,15 +148,14 @@ body, html {
     border-radius: 15px;
     width: fit-content;
     max-width: 70%;
-    float: left;
 }
 
 .my-message {
     background-color: #3498db;
     color: white;
     margin-left: auto;
-    float: right;
     border-radius: 15px;
+    max-width: 70%;
 }
 
 .message-user,
