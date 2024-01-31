@@ -9,7 +9,7 @@ function createDOM(htmlString) {
 }
 
 class LobbyView {
-    constructor() {
+    constructor(lobby) {
         this.elem = createDOM(`
             <div class="content">
                 <!-- Corresponding content from index.html -->
@@ -25,6 +25,41 @@ class LobbyView {
                 </div>
             </div>
         `);
+
+        this.listElem = this.elem.querySelector('.room-list');
+        this.inputElem = this.elem.querySelector('.page-control-input');
+        this.buttonElem = this.elem.querySelector('.page-control-btn');
+
+        this.lobby = lobby;
+
+        this.redrawList();
+
+        this.buttonElem.addEventListener('click', () => {
+            const newRoomName = this.inputElem.value.trim();
+
+            this.lobby.addRoom(
+                newRoomName + "-id",
+                newRoomName
+            );
+
+            this.inputElem.value = '';
+        });
+
+        this.lobby.onNewRoom = (room) => {
+            const listItem = createDOM(`<li><a href="#/chat/${room.id}">${room.name}</a></li>`);
+    this.listElem.appendChild(listItem);
+        };
+    }
+
+    redrawList () {
+        emptyDOM(this.listElem);
+
+        for (const roomId in this.lobby.rooms) {
+            const room = this.lobby.rooms[roomId];
+
+            const listItem = createDOM(`<li><a href="#/chat/${room.id}">${room.name}</a></li>`);
+            this.listElem.appendChild(listItem);
+        }
     }
 }
 
@@ -51,6 +86,11 @@ class ChatView {
                 </div>
             </div>
         `);
+
+        this.titleElem = this.elem.querySelector('.room-name');
+        this.chatElem = this.elem.querySelector('.message-list');
+        this.inputElem = this.elem.querySelector('.page-control-input');
+        this.buttonElem = this.elem.querySelector('.page-control-btn');
     }
 }
 
@@ -85,8 +125,53 @@ class ProfileView {
     }
 }
 
+class Room {
+    constructor(id, name, image = 'assets/everyone-icon.png', messages = []) {
+        this.id = id;
+        this.name = name;
+        this.image = image;
+        this.messages = messages;
+    }
+
+    addMessage(username, text) {
+        if (!text.trim()) {
+            return;
+        }
+
+        const message = { username, text };
+        this.messages.push(message);
+    }
+}
+
+class Lobby {
+    constructor() {
+        this.rooms = {
+            room1: new Room('room-1', 'Room 1'),
+            room2: new Room('room-2', 'Room 2'),
+            room3: new Room('room-3', 'Room 3'),
+            room4: new Room('room-4', 'Room 4'),
+        };
+        this.onNewRoom = null;
+    }
+
+    getRoom(roomId) {
+        return this.rooms[roomId] || null;
+    }
+
+    addRoom(id, name, image, messages) {
+        this.rooms[id] = new Room(id, name, image, messages);
+
+        if (this.onNewRoom) {
+            this.onNewRoom(this.rooms[id]);
+        }
+    }
+}
+
 function main() {
-    const lobbyView = new LobbyView();
+
+    const lobby = new Lobby();
+
+    const lobbyView = new LobbyView(lobby);
     const chatView = new ChatView();
     const profileView = new ProfileView();
 
@@ -104,7 +189,7 @@ function main() {
     
         if (path == "" || path === "/") {
             pageView.appendChild(lobbyView.elem);
-        } else if (path === "/chat") {
+        } else if (path.startsWith("/chat")) {
             pageView.appendChild(chatView.elem);
         } else if (path === "/profile") {
             pageView.appendChild(profileView.elem);
@@ -114,6 +199,14 @@ function main() {
     window.addEventListener('popstate', renderRoute);
 
     renderRoute();
+
+    cpen322.export(arguments.callee, {
+        renderRoute: renderRoute,
+        lobbyView: lobbyView,
+        chatView: chatView,
+        profileView: profileView,
+        lobby: lobby
+    });
 }
 
 window.addEventListener('load', main);
