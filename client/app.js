@@ -139,7 +139,7 @@ class ChatView {
     
     addMessageToChat(message) {
         const messageElem = createDOM(`<div class="message${message.username === profile.username ? ' my-message' : ''}">
-            <span class="message-user">${message.username}:</span>
+            <span class="message-user">${message.username}</span>
             <span class="message-text">${message.text}</span>
         </div>`);
         this.chatElem.appendChild(messageElem);
