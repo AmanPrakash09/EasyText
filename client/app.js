@@ -1,3 +1,5 @@
+const { response } = require("express");
+
 function emptyDOM(elem) {
     while (elem.firstChild) elem.removeChild(elem.firstChild);
 }
@@ -10,6 +12,22 @@ function createDOM(htmlString) {
 
 let profile = {
     username: "Alice"
+};
+
+let Service = {
+    origin : window.location.origin,
+    getAllRooms : function() {
+        return fetch('${this.origin}/chat')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`${response.status} ${response.statusText}`);
+                }
+                return response.json();
+            })
+            .catch(error => {
+                throw new Error(`Reuquest failed with message: ${error.message}`);
+            });
+    }
 };
 
 class LobbyView {
@@ -203,12 +221,7 @@ class Room {
 
 class Lobby {
     constructor() {
-        this.rooms = {
-            "room-1": new Room('room-1', 'Room 1'),
-            "room-2": new Room('room-2', 'Room 2'),
-            "room-3": new Room('room-3', 'Room 3'),
-            "room-4": new Room('room-4', 'Room 4'),
-        };
+        this.rooms = {};
         this.onNewRoom = null;
     }
 
@@ -232,6 +245,27 @@ function main() {
     const lobbyView = new LobbyView(lobby);
     const chatView = new ChatView();
     const profileView = new ProfileView();
+
+    function refreshLobby () {
+        Service.getAllRooms()
+            .then(rooms => {
+                for (const room of rooms) {
+                    if (lobby.rooms[room.id]) {
+                        lobby.rooms[room.id].name = room.name;
+                        lobby.rooms[room.id].image = room.image;
+                    } else {
+                        lobby.addRoom(room.id, room.name, room.image);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error("Error refreshing the lobby: " + error);
+            });
+    }
+
+    refreshLobby();
+
+    setInterval(refreshLobby, 60000);
 
     function renderRoute() {
         console.log("Current path:", window.location.hash.substring(1));
