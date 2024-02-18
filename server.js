@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
+const WebSocketServer = require('ws');
 const cpen322 = require('./cpen322-tester.js');
 
 function logRequest(req, res, next){
@@ -11,6 +12,8 @@ function logRequest(req, res, next){
 const host = 'localhost';
 const port = 3000;
 const clientApp = path.join(__dirname, 'client');
+
+const broker = new WebSocketServer({ port: 8080 });
 
 // express app
 let app = express();
@@ -32,6 +35,28 @@ let chatrooms = [
 let messages = {};
 chatrooms.forEach(room => {
     messages[room.id] = [];
+});
+
+broker.on('connection', function connection(ws) {
+    ws.on('message', function incoming(message) {
+		try {
+			const parsedMessage = JSON.parse(message);
+			const { roomId, username, text } = parsedMessage;
+
+			if (!messages[roomId]) {
+				messages[roomId] = [];
+			}
+			messages[roomId].push({ username, text });
+
+			broker.clients.forEach(function each(client) {
+				if (client !== ws && client.readyState === WebSocket.OPEN) {
+					client.send(message);
+				}
+			});
+		} catch (error) {
+            console.error('Error parsing incoming message:', error);
+        }
+    });
 });
 
 app.get('/chat', (req, res) => {
