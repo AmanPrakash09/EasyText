@@ -1,5 +1,3 @@
-const { response } = require("express");
-
 function emptyDOM(elem) {
     while (elem.firstChild) elem.removeChild(elem.firstChild);
 }
@@ -17,16 +15,35 @@ let profile = {
 let Service = {
     origin : window.location.origin,
     getAllRooms : function() {
-        return fetch('${this.origin}/chat')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`${response.status} ${response.statusText}`);
-                }
-                return response.json();
-            })
-            .catch(error => {
-                throw new Error(`Reuquest failed with message: ${error.message}`);
-            });
+        return fetch(`${this.origin}/chat`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            throw new Error(`Reuquest failed with message: ${error.message}`);
+        });
+    },
+    addRoom: function(data) {
+        console.log("Trying to add a room to this endpoint " + `${this.origin}/chat`);
+        return fetch(`${this.origin}/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .catch(error => {
+            throw new Error(`Request failed: ${error.message}`);
+        });
     }
 };
 
@@ -36,10 +53,10 @@ class LobbyView {
             <div class="content">
                 <!-- Corresponding content from index.html -->
                 <ul class="room-list">
-                    <li><a href="#/chat">Room 1</a></li>
-                    <li><a href="#/chat">Room 2</a></li>
-                    <li><a href="#/chat">Room 3</a></li>
-                    <li><a href="#/chat">Room 4</a></li>
+                    // <li><a href="#/chat">Room 1</a></li>
+                    // <li><a href="#/chat">Room 2</a></li>
+                    // <li><a href="#/chat">Room 3</a></li>
+                    // <li><a href="#/chat">Room 4</a></li>
                 </ul>
                 <div class="page-control">
                     <input type="text" class="page-control-input" placeholder="New room name">
@@ -59,12 +76,24 @@ class LobbyView {
         this.buttonElem.addEventListener('click', () => {
             const newRoomName = this.inputElem.value.trim();
 
-            this.lobby.addRoom(
-                newRoomName,
-                newRoomName
-            );
+            // this.lobby.addRoom(
+            //     newRoomName,
+            //     newRoomName
+            // );
 
-            this.inputElem.value = '';
+            // this.inputElem.value = '';
+            Service.addRoom({ name: newRoomName })
+            .then(newRoom => {
+                this.lobby.addRoom(newRoom.id, newRoom.name, newRoom.image);
+                this.inputElem.value = '';
+            })
+            .catch(error => {
+                console.error('Error adding room:', error);
+                const errorMessage = document.createElement('div');
+                errorMessage.textContent = `Error adding room: ${error.message}`;
+                errorMessage.classList.add('error-message');
+                this.elem.appendChild(errorMessage);
+            });
         });
 
         this.lobby.onNewRoom = (room) => {

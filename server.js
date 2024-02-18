@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
+const cpen322 = require('./cpen322-tester.js');
 
 function logRequest(req, res, next){
 	console.log(`${new Date()}  ${req.ip} : ${req.method} ${req.path}`);
@@ -34,7 +35,6 @@ chatrooms.forEach(room => {
 });
 
 app.get('/chat', (req, res) => {
-    // Build response array
     let chatData = chatrooms.map(room => {
         return {
             id: room.id,
@@ -46,6 +46,34 @@ app.get('/chat', (req, res) => {
     res.json(chatData);
 });
 
+app.post('/chat', (req, res) => {
+	console.log("Received POST request to /chat with data:", req.body);
+    const data = req.body;
+
+    if (!data || !data.name) {
+        res.status(400).json({ error: 'Name field is required' });
+        return;
+    }
+
+    const roomId = `room-${chatrooms.length + 1}`;
+
+    const newRoom = {
+        id: roomId,
+        name: data.name,
+        // image: data.image
+    };
+
+    chatrooms.push(newRoom);
+
+    messages[roomId] = [];
+
+    res.status(200).json(newRoom);
+});
+
+
 app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
+
+cpen322.connect('http://3.98.223.41/cpen322/test-a3-server.js');
+cpen322.export(__filename, { app, chatrooms });
