@@ -20,6 +20,32 @@ app.use(logRequest);							// logging for debug
 
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
+
+let chatrooms = [
+    { id: "room-1", name: "Room 1", image: "assets/everyone-icon.png" },
+    { id: "room-2", name: "Room 2", image: "assets/everyone-icon.png" },
+    { id: "room-3", name: "Room 3", image: "assets/everyone-icon.png" },
+    { id: "room-4", name: "Room 4", image: "assets/everyone-icon.png" }
+];
+
+let messages = {};
+chatrooms.forEach(room => {
+    messages[room.id] = [];
+});
+
+app.get('/chat', (req, res) => {
+    // Build response array
+    let chatData = chatrooms.map(room => {
+        return {
+            id: room.id,
+            name: room.name,
+            image: room.image,
+            messages: messages[room.id]
+        };
+    });
+    res.json(chatData);
+});
+
 app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });

@@ -305,11 +305,16 @@ function main() {
 
     renderRoute();
 
+    // cpen322.export(arguments.callee, {
+    //     renderRoute: renderRoute,
+    //     lobbyView: lobbyView,
+    //     chatView: chatView,
+    //     profileView: profileView,
+    //     lobby: lobby
+    // });
+
     cpen322.export(arguments.callee, {
-        renderRoute: renderRoute,
-        lobbyView: lobbyView,
-        chatView: chatView,
-        profileView: profileView,
+        refreshLobby: refreshLobby,
         lobby: lobby
     });
 }
