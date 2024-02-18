@@ -115,7 +115,7 @@ class LobbyView {
 }
 
 class ChatView {
-    constructor() {
+    constructor(socket) {
         this.elem = createDOM(`
             <div class="content">
                 <!-- Corresponding content from chat.html -->
@@ -152,6 +152,8 @@ class ChatView {
                 this.sendMessage();
             }
         });
+
+        this.socket = socket;
     }
 
     sendMessage() {
@@ -161,6 +163,13 @@ class ChatView {
             this.room.addMessage(profile.username, newMessage);
             this.inputElem.value = '';        
         }
+
+        const message = {
+            roomId: this.room.id,
+            username: profile.username,
+            text: newMessage
+        };
+        this.socket.send(JSON.stringify(message));
     }
 
     setRoom(room) {
@@ -269,12 +278,22 @@ class Lobby {
 
 function main() {
 
+    const socket = new WebSocket('ws://localhost:8000');
+
+    socket.addEventListener('message', event => {
+        const message = JSON.parse(event.data);
+        const room = lobby.getRoom(message.roomId);
+        if (room) {
+            room.addMessage(message.username, message.text);
+        }
+    });
+
     const lobby = new Lobby();
 
     const lobbyView = new LobbyView(lobby);
-    const chatView = new ChatView();
+    const chatView = new ChatView(socket);
     const profileView = new ProfileView();
-
+    
     function refreshLobby () {
         Service.getAllRooms()
             .then(rooms => {
