@@ -13,7 +13,7 @@ const host = 'localhost';
 const port = 3000;
 const clientApp = path.join(__dirname, 'client');
 
-const broker = new WebSocketServer({ port: 8080 });
+const broker = new WebSocketServer.Server({ port: 8000 });
 
 // express app
 let app = express();
@@ -60,15 +60,22 @@ broker.on('connection', function connection(ws) {
 });
 
 app.get('/chat', (req, res) => {
-    let chatData = chatrooms.map(room => {
-        return {
-            id: room.id,
-            name: room.name,
-            image: room.image,
-            messages: messages[room.id]
-        };
-    });
-    res.json(chatData);
+	console.log("GET request received for /chat");
+	try {
+		let chatData = chatrooms.map(room => {
+			return {
+				id: room.id,
+				name: room.name,
+				image: room.image,
+				messages: messages[room.id]
+			};
+		});
+		console.log("Sending chat data:", chatData);
+		res.json(chatData);
+    } catch (error) {
+        console.error("Error handling GET request for /chat:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
 app.post('/chat', (req, res) => {
@@ -76,6 +83,7 @@ app.post('/chat', (req, res) => {
     const data = req.body;
 
     if (!data || !data.name) {
+		console.error("Name field is required");
         res.status(400).json({ error: 'Name field is required' });
         return;
     }
@@ -85,12 +93,14 @@ app.post('/chat', (req, res) => {
     const newRoom = {
         id: roomId,
         name: data.name,
-        // image: data.image
+        image: data.image
     };
 
     chatrooms.push(newRoom);
 
     messages[roomId] = [];
+
+	console.log("New room added successfully");
 
     res.status(200).json(newRoom);
 });
@@ -101,4 +111,4 @@ app.listen(port, () => {
 });
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a3-server.js');
-cpen322.export(__filename, { app, chatrooms });
+cpen322.export(__filename, { app, chatrooms, messages });

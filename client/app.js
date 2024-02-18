@@ -14,37 +14,98 @@ let profile = {
 
 let Service = {
     origin : window.location.origin,
-    getAllRooms : function() {
-        return fetch(`${this.origin}/chat`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            throw new Error(`Reuquest failed with message: ${error.message}`);
+    // getAllRooms : function() {
+    //     console.log(`Getting all the rooms from this endpoint: ${this.origin}/chat`);
+    //     // const endpoint = `${this.origin}/chat`;
+    //     // if (endpoint.includes("error")) {
+    //     //     console.error("Endpoint contains 'error', aborting request.");
+    //     //     return Promise.reject(new Error("Endpoint contains 'error', aborting request."));
+    //     // }
+    //     return fetch(`${this.origin}/chat`)
+    //     .then(response => {
+    //         if (!response.ok) {
+    //             throw new Error(`Server responded with status ${response.status}: ${response.statusText}`);
+    //         }
+    //         return response.json();
+    //     })
+    //     .catch(error => {
+    //         throw new Error(`Reuquest failed with message: ${error.message}`);
+    //     });
+    // },
+    getAllRooms: function() {
+        console.log(`Getting all the rooms from this endpoint: ${this.origin}/chat`);
+        
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${this.origin}/chat`);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error(xhr.responseText));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                reject(new Error('Request failed'));
+            };
+            xhr.send();
         });
-    },
+    },    
+    // addRoom: function(data) {
+    //     console.log("Trying to add a room to this endpoint: " + `${this.origin}/chat`);
+    //     const { name, image } = data;
+    //     const bodyData = {
+    //         name: name
+    //     };
+    //     if (image) {
+    //         bodyData.image = image;
+    //     }
+    //     return fetch(`${this.origin}/chat`, {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json'
+    //         },
+    //         body: JSON.stringify(bodyData)
+    //     })
+    //     .then(response => {
+    //         if (!response.ok) {
+    //             throw new Error(`${response.status} ${response.statusText}`);
+    //         }
+    //         return response.json();
+    //     })
+    //     .catch(error => {
+    //         throw new Error(`Request failed: ${error.message}`);
+    //     });
+    // }
     addRoom: function(data) {
-        console.log("Trying to add a room to this endpoint " + `${this.origin}/chat`);
-        return fetch(`${this.origin}/chat`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-            return response.json();
-        })
-        .catch(error => {
-            throw new Error(`Request failed: ${error.message}`);
+        console.log("Trying to add a room to this endpoint: " + `${this.origin}/chat`);
+        const { name, image } = data;
+        const bodyData = {
+            name: name
+        };
+        if (image) {
+            bodyData.image = image;
+        }
+    
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${this.origin}/chat`);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error(`${xhr.responseText}`));
+                }
+            };
+            xhr.onerror = function() {
+                reject(new Error('Request failed'));
+            };
+            xhr.send(JSON.stringify(bodyData));
         });
-    }
+    }    
 };
 
 class LobbyView {
@@ -75,6 +136,7 @@ class LobbyView {
 
         this.buttonElem.addEventListener('click', () => {
             const newRoomName = this.inputElem.value.trim();
+            const newRoomImage = 'assets/everyone-icon.png';
 
             // this.lobby.addRoom(
             //     newRoomName,
@@ -82,7 +144,10 @@ class LobbyView {
             // );
 
             // this.inputElem.value = '';
-            Service.addRoom({ name: newRoomName })
+            Service.addRoom({
+                name: newRoomName,
+                image: newRoomImage
+            })
             .then(newRoom => {
                 this.lobby.addRoom(newRoom.id, newRoom.name, newRoom.image);
                 this.inputElem.value = '';
