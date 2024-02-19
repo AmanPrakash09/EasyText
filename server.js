@@ -1,7 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
-const WebSocketServer = require('ws');
+const WebSocket = require('ws');
 const cpen322 = require('./cpen322-tester.js');
 
 function logRequest(req, res, next){
@@ -13,7 +13,7 @@ const host = 'localhost';
 const port = 3000;
 const clientApp = path.join(__dirname, 'client');
 
-const broker = new WebSocketServer.Server({ port: 8000 });
+const broker = new WebSocket.Server({ port: 8000 });
 
 // express app
 let app = express();
@@ -38,10 +38,15 @@ chatrooms.forEach(room => {
 });
 
 broker.on('connection', function connection(ws) {
+    console.log('Client connected');
+
     ws.on('message', function incoming(message) {
+        console.log('Received message:', message);
+        
 		try {
 			const parsedMessage = JSON.parse(message);
 			const { roomId, username, text } = parsedMessage;
+			const serializedMessage = JSON.stringify({ roomId, username, text });
 
 			if (!messages[roomId]) {
 				messages[roomId] = [];
@@ -50,12 +55,17 @@ broker.on('connection', function connection(ws) {
 
 			broker.clients.forEach(function each(client) {
 				if (client !== ws && client.readyState === WebSocket.OPEN) {
-					client.send(message);
+                    console.log('Broadcasting message to client');
+					client.send(serializedMessage);
 				}
 			});
 		} catch (error) {
             console.error('Error parsing incoming message:', error);
         }
+    });
+
+	ws.on('close', function () {
+        console.log('Client disconnected');
     });
 });
 
@@ -111,4 +121,4 @@ app.listen(port, () => {
 });
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a3-server.js');
-cpen322.export(__filename, { app, chatrooms, messages });
+cpen322.export(__filename, { app, chatrooms, messages, broker });

@@ -14,24 +14,6 @@ let profile = {
 
 let Service = {
     origin : window.location.origin,
-    // getAllRooms : function() {
-    //     console.log(`Getting all the rooms from this endpoint: ${this.origin}/chat`);
-    //     // const endpoint = `${this.origin}/chat`;
-    //     // if (endpoint.includes("error")) {
-    //     //     console.error("Endpoint contains 'error', aborting request.");
-    //     //     return Promise.reject(new Error("Endpoint contains 'error', aborting request."));
-    //     // }
-    //     return fetch(`${this.origin}/chat`)
-    //     .then(response => {
-    //         if (!response.ok) {
-    //             throw new Error(`Server responded with status ${response.status}: ${response.statusText}`);
-    //         }
-    //         return response.json();
-    //     })
-    //     .catch(error => {
-    //         throw new Error(`Reuquest failed with message: ${error.message}`);
-    //     });
-    // },
     getAllRooms: function() {
         console.log(`Getting all the rooms from this endpoint: ${this.origin}/chat`);
         
@@ -50,35 +32,10 @@ let Service = {
             xhr.onerror = function() {
                 reject(new Error('Request failed'));
             };
+            
             xhr.send();
         });
-    },    
-    // addRoom: function(data) {
-    //     console.log("Trying to add a room to this endpoint: " + `${this.origin}/chat`);
-    //     const { name, image } = data;
-    //     const bodyData = {
-    //         name: name
-    //     };
-    //     if (image) {
-    //         bodyData.image = image;
-    //     }
-    //     return fetch(`${this.origin}/chat`, {
-    //         method: 'POST',
-    //         headers: {
-    //             'Content-Type': 'application/json'
-    //         },
-    //         body: JSON.stringify(bodyData)
-    //     })
-    //     .then(response => {
-    //         if (!response.ok) {
-    //             throw new Error(`${response.status} ${response.statusText}`);
-    //         }
-    //         return response.json();
-    //     })
-    //     .catch(error => {
-    //         throw new Error(`Request failed: ${error.message}`);
-    //     });
-    // }
+    },
     addRoom: function(data) {
         console.log("Trying to add a room to this endpoint: " + `${this.origin}/chat`);
         const { name, image } = data;
@@ -138,12 +95,6 @@ class LobbyView {
             const newRoomName = this.inputElem.value.trim();
             const newRoomImage = 'assets/everyone-icon.png';
 
-            // this.lobby.addRoom(
-            //     newRoomName,
-            //     newRoomName
-            // );
-
-            // this.inputElem.value = '';
             Service.addRoom({
                 name: newRoomName,
                 image: newRoomImage
@@ -366,8 +317,9 @@ function main() {
                     if (lobby.rooms[room.id]) {
                         lobby.rooms[room.id].name = room.name;
                         lobby.rooms[room.id].image = room.image;
+                        lobby.rooms[room.id].messages = room.messages;
                     } else {
-                        lobby.addRoom(room.id, room.name, room.image);
+                        lobby.addRoom(room.id, room.name, room.image, room.messages);
                     }
                 }
             })
@@ -418,17 +370,11 @@ function main() {
 
     renderRoute();
 
-    // cpen322.export(arguments.callee, {
-    //     renderRoute: renderRoute,
-    //     lobbyView: lobbyView,
-    //     chatView: chatView,
-    //     profileView: profileView,
-    //     lobby: lobby
-    // });
-
     cpen322.export(arguments.callee, {
         refreshLobby: refreshLobby,
-        lobby: lobby
+        lobby: lobby,
+        socket: socket,
+        chatView: chatView
     });
 }
 
