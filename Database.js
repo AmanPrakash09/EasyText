@@ -38,7 +38,7 @@ Database.prototype.getRooms = function() {
                 resolve(rooms);
             }).catch(error => {
                 console.error('Error retrieving rooms:', error);
-                resolve([]); // Resolve with an empty array in case of an error
+                reject(error); // Resolve with an empty array in case of an error
             });
         })
     );
@@ -48,26 +48,31 @@ Database.prototype.getRooms = function() {
 Database.prototype.getRoom = function(room_id){
 	return this.connected.then(db =>
 		new Promise((resolve, reject) => {
-			const ObjectID = require('mongodb').ObjectID;
-            let id;
+			// const ObjectID = require('mongodb').ObjectID;
+            // let id;
 
-            try {
-                if (room_id instanceof ObjectID) {
-                    id = room_id;
-                } else {
-                    id = new ObjectID(room_id);
-                }
+            // try {
+            //     if (room_id instanceof ObjectID) {
+            //         id = room_id;
+            //     } else {
+            //         id = new ObjectID(room_id);
+            //     }
 
-                db.collection('chatrooms').findOne({ _id: id }, (err, room) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(room);
-                    }
-                });
-            } catch (error) {
-                reject(error);
-            }
+            //     db.collection('chatrooms').findOne({ _id: id }, (err, room) => {
+            //         if (err) {
+            //             reject(err);
+            //         } else {
+            //             resolve(room);
+            //         }
+            //     });
+            // } catch (error) {
+            //     reject(error);
+            // }
+			if (db) {
+				resolve(db.collection('chatrooms').findOne({ _d: room_id }));
+			} else {
+				reject(err);
+			}
 		})
 	)
 }
