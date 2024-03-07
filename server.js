@@ -3,6 +3,21 @@ const fs = require('fs');
 const express = require('express');
 const WebSocket = require('ws');
 const cpen322 = require('./cpen322-tester.js');
+// ----------------------------------------------------TASK 1----------------------------------------------------
+const Database = require('./Database');
+
+const mongoUrl = 'mongodb://localhost:27017';
+const dbName = 'cpen322-messenger';
+
+const db = new Database(mongoUrl, dbName);
+
+db.connected.then(() => {
+    console.log(`[MongoClient] Connected to ${mongoUrl}/${dbName}`);
+}).catch(err => {
+    console.error('[MongoClient] Connection error:', err);
+});
+
+// ----------------------------------------------------TASK 1----------------------------------------------------
 
 function logRequest(req, res, next){
 	console.log(`${new Date()}  ${req.ip} : ${req.method} ${req.path}`);
@@ -120,5 +135,5 @@ app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
 
-cpen322.connect('http://3.98.223.41/cpen322/test-a3-server.js');
-cpen322.export(__filename, { app, chatrooms, messages, broker });
+cpen322.connect('http://3.98.223.41/cpen322/test-a4-server.js');
+cpen322.export(__filename, { app, chatrooms, db, messages, messageBlockSize, broker });

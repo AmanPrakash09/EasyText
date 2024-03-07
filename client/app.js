@@ -370,6 +370,10 @@ function main() {
 
     renderRoute();
 
+    cpen322.setDefault("testRoomId", "room-1");
+    cpen322.setDefault("image", "assets/everyone-icon.png");
+    cpen322.setDefault("webSocketServer", "ws://localhost:8000");
+
     cpen322.export(arguments.callee, {
         refreshLobby: refreshLobby,
         lobby: lobby,
