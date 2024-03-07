@@ -7,34 +7,41 @@ const { MongoClient, ObjectId } = require('mongodb');	// require the mongodb dri
  */
 function Database(mongoUrl, dbName){
 	if (!(this instanceof Database)) return new Database(mongoUrl, dbName);
-	this.connected = new Promise((resolve, reject) => {
-		const client = new MongoClient(mongoUrl);
+ 	this.connected = new Promise((resolve, reject) => {
+  		const client = new MongoClient(mongoUrl);
 
-		client.connect()
-		.then(() => {
-			console.log('[MongoClient] Connected to ' + mongoUrl + '/' + dbName);
-			resolve(client.db(dbName));
-		}, reject);
+  		client.connect()
+			.then(() => {
+   				// Ping the dbName to ensure it exists
+   				return client.db(dbName).command({ ping: 1 });
+  			})
+			.then(() => {
+  	 			console.log('[MongoClient] Connected to ' + mongoUrl + '/' + dbName);
+   				resolve(client.db(dbName));
+  			})
+  			.catch((err) => {
+  	 			reject(err);
+ 		 	});
 	});
-	this.status = () => this.connected.then(
-		db => ({ error: null, url: mongoUrl, db: dbName }),
-		err => ({ error: err })
-	);
+ 	this.status = () => this.connected.then(
+  		db => ({ error: null, url: mongoUrl, db: dbName }),
+  		err => ({ error: err })
+ 	);
 }
 
 // TASK 2 PART A
-Database.prototype.getRooms = function(){
-	return this.connected.then(db =>
-		new Promise((resolve, reject) => {
-			this.db.collection('chatrooms').find().toArray((err, rooms) => {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(rooms);
-				}
-			});
-		})
-	)
+Database.prototype.getRooms = function() {
+    return this.connected.then(db =>
+        new Promise((resolve, reject) => {
+            const collection = db.collection('chatrooms');
+            collection.find({}).toArray().then(rooms => {
+                resolve(rooms);
+            }).catch(error => {
+                console.error('Error retrieving rooms:', error);
+                resolve([]); // Resolve with an empty array in case of an error
+            });
+        })
+    );
 }
 
 // TASK 2 PART D

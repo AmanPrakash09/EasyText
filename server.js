@@ -40,12 +40,12 @@ app.use(logRequest);							// logging for debug
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
 
-let chatrooms = [
-    { id: "room-1", name: "Room 1", image: "assets/everyone-icon.png" },
-    { id: "room-2", name: "Room 2", image: "assets/everyone-icon.png" },
-    { id: "room-3", name: "Room 3", image: "assets/everyone-icon.png" },
-    { id: "room-4", name: "Room 4", image: "assets/everyone-icon.png" }
-];
+// let chatrooms = [
+//     { id: "room-1", name: "Room 1", image: "assets/everyone-icon.png" },
+//     { id: "room-2", name: "Room 2", image: "assets/everyone-icon.png" },
+//     { id: "room-3", name: "Room 3", image: "assets/everyone-icon.png" },
+//     { id: "room-4", name: "Room 4", image: "assets/everyone-icon.png" }
+// ];
 
 let messages = {};
 
@@ -60,9 +60,9 @@ db.getRooms()
         console.error('Error initializing messages:', err);
     });
 
-chatrooms.forEach(room => {
-    messages[room.id] = [];
-});
+// chatrooms.forEach(room => {
+//     messages[room.id] = [];
+// });
 
 broker.on('connection', function connection(ws) {
     console.log('Client connected');
@@ -117,10 +117,10 @@ app.get('/chat', (req, res) => {
     db.getRooms()
 	.then(rooms => {
 		const chatData = rooms.map(room => ({
-			id: room._id.toString(),
+			id: room._id,
 			name: room.name,
 			image: room.image,
-			messages: messages[room._id.toString()] || []
+			messages: messages[room._id] || []
 		}));
 		res.json(chatData);
 	})
@@ -133,6 +133,7 @@ app.get('/chat', (req, res) => {
 // TASK 2 PART E
 app.get('/chat/:room_id', (req, res) => {
     const room_id = req.params.room_id;
+	console.log("Room ID:", room_id);
     db.getRoom(room_id)
         .then(room => {
             if (room) {
@@ -181,4 +182,4 @@ app.listen(port, () => {
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a4-server.js');
 // cpen322.export(__filename, { app, chatrooms, db, messages, messageBlockSize, broker });
-cpen322.export(__filename, { app, chatrooms, db, messages, broker });
+cpen322.export(__filename, { app, db, messages, broker });
