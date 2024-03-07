@@ -6,7 +6,7 @@ const cpen322 = require('./cpen322-tester.js');
 // ----------------------------------------------------TASK 1----------------------------------------------------
 const Database = require('./Database.js');
 
-const mongoUrl = 'mongodb://localhost:27017';
+const mongoUrl = 'mongodb://127.0.0.1:27017';
 const dbName = 'cpen322-messenger';
 
 const db = new Database(mongoUrl, dbName);
