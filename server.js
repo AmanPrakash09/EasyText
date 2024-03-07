@@ -4,7 +4,7 @@ const express = require('express');
 const WebSocket = require('ws');
 const cpen322 = require('./cpen322-tester.js');
 // ----------------------------------------------------TASK 1----------------------------------------------------
-const Database = require('./Database');
+const Database = require('./Database.js');
 
 const mongoUrl = 'mongodb://localhost:27017';
 const dbName = 'cpen322-messenger';
@@ -136,4 +136,5 @@ app.listen(port, () => {
 });
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a4-server.js');
-cpen322.export(__filename, { app, chatrooms, db, messages, messageBlockSize, broker });
+// cpen322.export(__filename, { app, chatrooms, db, messages, messageBlockSize, broker });
+cpen322.export(__filename, { app, chatrooms, db, messages, broker });
