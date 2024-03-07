@@ -48,6 +48,18 @@ let chatrooms = [
 ];
 
 let messages = {};
+
+// TASK 2 PART B
+db.getRooms()
+    .then(rooms => {
+        rooms.forEach(room => {
+            messages[room._id.toString()] = [];
+        });
+    })
+    .catch(err => {
+        console.error('Error initializing messages:', err);
+    });
+
 chatrooms.forEach(room => {
     messages[room.id] = [];
 });
@@ -84,23 +96,55 @@ broker.on('connection', function connection(ws) {
     });
 });
 
+// TASK 2 PART C
 app.get('/chat', (req, res) => {
 	console.log("GET request received for /chat");
-	try {
-		let chatData = chatrooms.map(room => {
-			return {
-				id: room.id,
-				name: room.name,
-				image: room.image,
-				messages: messages[room.id]
-			};
-		});
-		console.log("Sending chat data:", chatData);
+	// try {
+	// 	let chatData = chatrooms.map(room => {
+	// 		return {
+	// 			id: room.id,
+	// 			name: room.name,
+	// 			image: room.image,
+	// 			messages: messages[room.id]
+	// 		};
+	// 	});
+	// 	console.log("Sending chat data:", chatData);
+	// 	res.json(chatData);
+    // } catch (error) {
+    //     console.error("Error handling GET request for /chat:", error);
+    //     res.status(500).json({ error: 'Internal Server Error' });
+    // }
+    db.getRooms()
+	.then(rooms => {
+		const chatData = rooms.map(room => ({
+			id: room._id.toString(),
+			name: room.name,
+			image: room.image,
+			messages: messages[room._id.toString()] || []
+		}));
 		res.json(chatData);
-    } catch (error) {
-        console.error("Error handling GET request for /chat:", error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    }
+	})
+	.catch(error => {
+		console.error("Error handling GET request for /chat:", error);
+		res.status(500).json({ error: 'Internal Server Error' });
+	});
+});
+
+// TASK 2 PART E
+app.get('/chat/:room_id', (req, res) => {
+    const room_id = req.params.room_id;
+    db.getRoom(room_id)
+        .then(room => {
+            if (room) {
+                res.json(room);
+            } else {
+                res.status(404).json({ error: `Room ${room_id} was not found` });
+            }
+        })
+        .catch(error => {
+            console.error("Error handling GET request for /chat/:room_id:", error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        });
 });
 
 app.post('/chat', (req, res) => {

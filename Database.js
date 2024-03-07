@@ -22,20 +22,45 @@ function Database(mongoUrl, dbName){
 	);
 }
 
+// TASK 2 PART A
 Database.prototype.getRooms = function(){
 	return this.connected.then(db =>
 		new Promise((resolve, reject) => {
-			/* TODO: read the chatrooms from `db`
-			 * and resolve an array of chatrooms */
+			this.db.collection('chatrooms').find().toArray((err, rooms) => {
+				if (err) {
+					reject(err);
+				} else {
+					resolve(rooms);
+				}
+			});
 		})
 	)
 }
 
+// TASK 2 PART D
 Database.prototype.getRoom = function(room_id){
 	return this.connected.then(db =>
 		new Promise((resolve, reject) => {
-			/* TODO: read the chatroom from `db`
-			 * and resolve the result */
+			const ObjectID = require('mongodb').ObjectID;
+            let id;
+
+            try {
+                if (room_id instanceof ObjectID) {
+                    id = room_id;
+                } else {
+                    id = new ObjectID(room_id);
+                }
+
+                db.collection('chatrooms').findOne({ _id: id }, (err, room) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(room);
+                    }
+                });
+            } catch (error) {
+                reject(error);
+            }
 		})
 	)
 }
