@@ -8,6 +8,22 @@ function createDOM(htmlString) {
     return template.content.firstChild;
 }
 
+function* makeConversationLoader(room) {
+    let lastTimestamp = Date.now();  // Assuming the room was created now
+
+    while (true) {
+        const conversation = yield Service.getLastConversation(room.id, lastTimestamp);
+        if (conversation) {
+            lastTimestamp = conversation.timestamp - 1;
+            room.canLoadConversation = true;
+            room.addConversation(conversation);
+        } else {
+            room.canLoadConversation = false;
+            break;
+        }
+    }
+}
+
 let profile = {
     username: "Alice"
 };
@@ -174,12 +190,20 @@ class ChatView {
             </div>
         `);
 
+        
+
         this.titleElem = this.elem.querySelector('.room-name');
         this.chatElem = this.elem.querySelector('.message-list');
         this.inputElem = this.elem.querySelector('.page-control-input');
         this.buttonElem = this.elem.querySelector('.page-control-btn');
 
         this.room = null;
+
+        this.chatElem.addEventListener('wheel', (event) => {
+            if (event.deltaY < 0 && this.chatElem.scrollTop === 0 && this.room.canLoadConversation) {
+                this.room.getLastConversation.next();
+            }
+        });
 
         this.buttonElem.addEventListener('click', () => this.sendMessage());
     
@@ -226,6 +250,33 @@ class ChatView {
         this.room.onNewMessage = (message) => {
             console.log("New message received:", message);
             this.addMessageToChat(message);
+        };
+
+        this.room.onFetchConversation = (conversation) => {
+            const prevScrollHeight = this.chatElem.scrollHeight;
+
+            conversation.messages.forEach((message) => {
+                // Code snippet to create and prepend the message DOM elements
+                const messageElem = document.createElement('div');
+                messageElem.className = 'message';
+
+                const userElem = document.createElement('span');
+                userElem.className = 'message-user';
+                userElem.textContent = `${message.username}: `;
+
+                const textElem = document.createElement('span');
+                textElem.className = 'message-text';
+                textElem.textContent = message.text;
+
+                messageElem.appendChild(userElem);
+                messageElem.appendChild(textElem);
+
+                this.chatElem.prepend(messageElem); // Add the message at the beginning of the chat
+            });
+
+            // Adjust scroll position after prepending messages
+            const currentScrollHeight = this.chatElem.scrollHeight;
+            this.chatElem.scrollTop = currentScrollHeight - prevScrollHeight;
         };
     }
     
@@ -275,7 +326,10 @@ class Room {
         this.name = name;
         this.image = image;
         this.messages = messages;
+        this.canLoadConversation = true;
+        this.getLastConversation = makeConversationLoader(this);
     }
+
 
     addMessage(username, text) {
         if (!text.trim()) {
@@ -289,6 +343,13 @@ class Room {
 
         if (this.onNewMessage) {
             this.onNewMessage(message);
+        }
+    }
+
+    addConversation(conversation) {
+        this.messages = conversation.messages.concat(this.messages);
+        if (this.onFetchConversation) {
+            this.onFetchConversation(conversation);
         }
     }
 }
