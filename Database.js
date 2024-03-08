@@ -69,7 +69,7 @@ Database.prototype.getRoom = function(room_id){
             //     reject(error);
             // }
 			if (db) {
-				resolve(db.collection('chatrooms').findOne({ _d: room_id }));
+				resolve(db.collection('chatrooms').findOne({ _id: room_id }));
 			} else {
 				reject(err);
 			}
