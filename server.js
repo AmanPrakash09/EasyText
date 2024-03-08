@@ -129,31 +129,39 @@ app.get('/chat/:room_id', async (req, res) => {
 });
 
 app.post('/chat', (req, res) => {
-	console.log("Received POST request to /chat with data:", req.body);
-    const data = req.body;
+    console.log("Received POST request to /chat with data:", req.body);
+    const roomData = req.body;
 
-    if (!data || !data.name) {
-		console.error("Name field is required");
+    if (!roomData || !roomData.name) {
+        console.error("Name field is required");
         res.status(400).json({ error: 'Name field is required' });
         return;
     }
 
-    const roomId = `room-${chatrooms.length + 1}`;
+    // Count existing rooms to generate new room ID
+    db.getRooms().then(existingRooms => {
+        const newRoomId = `room-${existingRooms.length + 1}`; // Generate new room ID
+        const newRoom = {
+            _id: newRoomId, // Assign new room ID
+            name: roomData.name,
+            image: roomData.image || 'assets/default-room-icon.png' // Default image if not provided
+        };
 
-    const newRoom = {
-        id: roomId,
-        name: data.name,
-        image: data.image
-    };
+        return db.addRoom(newRoom); // Add the new room to the database
+    })
+    .then(addedRoom => {
+        messages[addedRoom._id] = []; // Initialize an empty array for messages in the new room
 
-    chatrooms.push(newRoom);
-
-    messages[roomId] = [];
-
-	console.log("New room added successfully");
-
-    res.status(200).json(newRoom);
+        console.log("New room added successfully");
+        res.status(200).json(addedRoom); // Send back the new room data including the _id
+    })
+    .catch(err => {
+        console.error("Error adding new room:", err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    });
 });
+
+
 
 
 app.listen(port, () => {

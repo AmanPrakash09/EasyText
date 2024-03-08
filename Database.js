@@ -77,14 +77,53 @@ Database.prototype.getRoom = function(room_id){
 	)
 }
 
+
 Database.prototype.addRoom = function(room){
-	return this.connected.then(db => 
-		new Promise((resolve, reject) => {
-			/* TODO: insert a room in the "chatrooms" collection in `db`
-			 * and resolve the newly added room */
-		})
-	)
-}
+    if (!room.name) {
+        return Promise.reject(new Error("Room name is required"));
+    }
+
+    return this.connected.then(db =>
+        new Promise((resolve, reject) => {
+            db.collection('chatrooms').insertOne(room)
+            .then(result => {
+                db.collection('chatrooms').findOne({ _id: result.insertedId })
+                .then(newRoom => {
+                    resolve(newRoom); // Return the newly added room as it is in the database
+                }).catch(findError => {
+                    reject(findError);
+                });
+            }).catch(insertError => {
+                reject(insertError);
+            });
+        })
+    );
+};
+
+
+Database.prototype.addRoom = function(room){
+    if (!room.name) {
+        return Promise.reject(new Error("Room name is required"));
+    }
+
+    return this.connected.then(db =>
+        new Promise((resolve, reject) => {
+            db.collection('chatrooms').insertOne(room)
+            .then(result => {
+                // Use the insertedId to fetch the newly added room
+                const newRoomId = result.insertedId;
+                db.collection('chatrooms').findOne({ _id: newRoomId })
+                .then(newRoom => {
+                    resolve(newRoom); // Return the newly added room
+                }).catch(err => {
+                    reject(err);
+                });
+            }).catch(err => {
+                reject(err);
+            });
+        })
+    );
+};
 
 Database.prototype.getLastConversation = function(room_id, before){
 	return this.connected.then(db =>
