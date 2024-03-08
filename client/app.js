@@ -62,7 +62,27 @@ let Service = {
             };
             xhr.send(JSON.stringify(bodyData));
         });
-    }    
+    },
+    getLastConversation: function(roomId, before) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${this.origin}/chat/${roomId}/messages?before=${before}`);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error(xhr.responseText));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                reject(new Error('Request failed'));
+            };
+            xhr.send();
+        });
+    }
+    
 };
 
 class LobbyView {

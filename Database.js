@@ -135,12 +135,41 @@ Database.prototype.getLastConversation = function(room_id, before){
 }
 
 Database.prototype.addConversation = function(conversation){
-	return this.connected.then(db =>
-		new Promise((resolve, reject) => {
-			/* TODO: insert a conversation in the "conversations" collection in `db`
-			 * and resolve the newly added conversation */
-		})
-	)
-}
+    if (!conversation.room_id || !conversation.timestamp || !conversation.messages) {
+        return Promise.reject(new Error("Missing required fields in conversation object"));
+    }
+
+    return this.connected.then(db =>
+        new Promise((resolve, reject) => {
+            db.collection('conversations').insertOne(conversation)
+            .then(result => {
+                db.collection('conversations').findOne({ _id: result.insertedId })
+                .then(newConversation => {
+                    resolve(newConversation);
+                }).catch(findError => {
+                    reject(findError);
+                });
+            }).catch(insertError => {
+                reject(insertError);
+            });
+        })
+    );
+};
+
+Database.prototype.getLastConversation = function(room_id, before = Date.now()){
+    return this.connected.then(db =>
+        new Promise((resolve, reject) => {
+            db.collection('conversations').find({ room_id: room_id, timestamp: { $lt: before } })
+            .sort({ timestamp: -1 })
+            .limit(1)
+            .toArray()
+            .then(result => {
+                resolve(result[0] || null);
+            }).catch(error => {
+                reject(error);
+            });
+        })
+    );
+};
 
 module.exports = Database;

@@ -30,6 +30,8 @@ const clientApp = path.join(__dirname, 'client');
 
 const broker = new WebSocket.Server({ port: 8000 });
 
+const messageBlockSize = 10; // Adjust as necessary
+
 // express app
 let app = express();
 
@@ -86,6 +88,22 @@ broker.on('connection', function connection(ws) {
 					client.send(serializedMessage);
 				}
 			});
+
+            if (messages[roomId].length === messageBlockSize) {
+                const conversation = {
+                    room_id: roomId,
+                    timestamp: Date.now(),
+                    messages: messages[roomId].slice() // Copy the messages
+                };
+
+                db.addConversation(conversation)
+                .then(() => {
+                    messages[roomId] = []; // Clear messages for the room after saving
+                }).catch(err => {
+                    console.error('Error saving conversation:', err);
+                });
+            }
+
 		} catch (error) {
             console.error('Error parsing incoming message:', error);
         }
@@ -161,6 +179,25 @@ app.post('/chat', (req, res) => {
     });
 });
 
+app.get('/chat/:room_id/messages', (req, res) => {
+    const room_id = req.params.room_id;
+    const before = req.query.before ? parseInt(req.query.before) : Date.now();
+
+    db.getLastConversation(room_id, before)
+    .then(conversation => {
+        if (conversation) {
+            res.json(conversation);
+        } else {
+            res.status(404).json({ error: `No conversation found for room ${room_id}` });
+        }
+    })
+    .catch(err => {
+        console.error('Error getting last conversation:', err);
+        res.status(500).json({ error: 'Internal Server Error' });
+    });
+});
+
+
 
 
 
@@ -169,5 +206,5 @@ app.listen(port, () => {
 });
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a4-server.js');
-// cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });
+cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });
 cpen322.export(__filename, { app, db, messages, broker });
