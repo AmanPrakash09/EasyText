@@ -53,7 +53,7 @@ let messages = {};
 db.getRooms()
     .then(rooms => {
         rooms.forEach(room => {
-            messages[room._id.toString()] = [];
+            messages[room._id] = [];
         });
     })
     .catch(err => {
@@ -97,55 +97,67 @@ broker.on('connection', function connection(ws) {
 });
 
 // TASK 2 PART C
-app.get('/chat', (req, res) => {
-	console.log("GET request received for /chat");
-	// try {
-	// 	let chatData = chatrooms.map(room => {
-	// 		return {
-	// 			id: room.id,
-	// 			name: room.name,
-	// 			image: room.image,
-	// 			messages: messages[room.id]
-	// 		};
-	// 	});
-	// 	console.log("Sending chat data:", chatData);
-	// 	res.json(chatData);
-    // } catch (error) {
-    //     console.error("Error handling GET request for /chat:", error);
-    //     res.status(500).json({ error: 'Internal Server Error' });
-    // }
-    db.getRooms()
-	.then(rooms => {
-		const chatData = rooms.map(room => ({
-			id: room._id,
-			name: room.name,
-			image: room.image,
-			messages: messages[room._id] || []
-		}));
-		res.json(chatData);
-	})
-	.catch(error => {
-		console.error("Error handling GET request for /chat:", error);
-		res.status(500).json({ error: 'Internal Server Error' });
-	});
+// app.get('/chat', (req, res) => {
+// 	console.log("GET request received for /chat");
+// 	// try {
+// 	// 	let chatData = chatrooms.map(room => {
+// 	// 		return {
+// 	// 			id: room.id,
+// 	// 			name: room.name,
+// 	// 			image: room.image,
+// 	// 			messages: messages[room.id]
+// 	// 		};
+// 	// 	});
+// 	// 	console.log("Sending chat data:", chatData);
+// 	// 	res.json(chatData);
+//     // } catch (error) {
+//     //     console.error("Error handling GET request for /chat:", error);
+//     //     res.status(500).json({ error: 'Internal Server Error' });
+//     // }
+//     db.getRooms()
+// 	.then(rooms => {
+// 		const chatData = rooms.map(room => ({
+// 			id: room._id,
+// 			name: room.name,
+// 			image: room.image,
+// 			messages: messages[room._id] || []
+// 		}));
+// 		res.json(chatData);
+// 	})
+// 	.catch(error => {
+// 		console.error("Error handling GET request for /chat:", error);
+// 		res.status(500).json({ error: 'Internal Server Error' });
+// 	});
+// });
+app.get('/chat', async (req, res) => {
+    console.log("GET request received for /chat");
+    
+    try {
+        const rooms = await db.getRooms();
+        const chatData = rooms.map(room => ({
+            id: room._id,
+            name: room.name,
+            image: room.image,
+            messages: messages[room._id] || []
+        }));
+        res.json(chatData);
+    } catch (error) {
+        console.error("Error handling GET request for /chat:", error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
 });
 
 // TASK 2 PART E
-app.get('/chat/:room_id', (req, res) => {
+app.get('/chat/:room_id', async (req, res) => {
     const room_id = req.params.room_id;
 	console.log("Room ID:", room_id);
-    db.getRoom(room_id)
-        .then(room => {
-            if (room) {
-                res.json(room);
-            } else {
-                res.status(404).json({ error: `Room ${room_id} was not found` });
-            }
-        })
-        .catch(error => {
-            console.error("Error handling GET request for /chat/:room_id:", error);
-            res.status(500).json({ error: 'Internal Server Error' });
-        });
+
+	let room = await db.getRoom(room_id);
+	if (room) {
+		res.json(room);
+	} else {
+		res.status(404).json({ error: `Room ${room_id} was not found` });
+	}
 });
 
 app.post('/chat', (req, res) => {

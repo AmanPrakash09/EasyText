@@ -48,14 +48,14 @@ Database.prototype.getRooms = function() {
 Database.prototype.getRoom = function(room_id){
 	return this.connected.then(db =>
 		new Promise((resolve, reject) => {
-			// const ObjectID = require('mongodb').ObjectID;
+			// const ObjectId = require('mongodb').ObjectId;
             // let id;
 
             // try {
-            //     if (room_id instanceof ObjectID) {
+            //     if (room_id instanceof ObjectId) {
             //         id = room_id;
             //     } else {
-            //         id = new ObjectID(room_id);
+            //         id = new ObjectId(room_id);
             //     }
 
             //     db.collection('chatrooms').findOne({ _id: id }, (err, room) => {
