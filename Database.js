@@ -58,22 +58,21 @@ Database.prototype.getRoom = function(room_id){
 }
 
 Database.prototype.addRoom = function(room){
-    if (!room.name) {
-        return Promise.reject(new Error("Room name is required"));
-    }
-
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-            db.collection('chatrooms').insertOne(room)
-            .then(result => {
-                return db.collection('chatrooms').findOne({ _id: result.insertedId });
-            })
-            .then(newRoom => {
-                resolve(newRoom)
-            })
-            .catch(err => {
-                reject(err);
-            });
+			if (db) {
+				if (!room.name) {
+					reject(new Error('dne'));
+				} else {
+					if (!room._id) {
+						room._id = new ObjectId().toString();
+					}
+					db.collection('chatrooms').insertOne(room);
+					resolve(room);
+				}
+			} else {
+				reject(err);
+			}
         })
     );
 };
