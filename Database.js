@@ -38,7 +38,7 @@ Database.prototype.getRooms = function() {
                 resolve(rooms);
             }).catch(error => {
                 console.error('Error retrieving rooms:', error);
-                reject(error); // Resolve with an empty array in case of an error
+                reject(error);
             });
         })
     );
@@ -48,26 +48,6 @@ Database.prototype.getRooms = function() {
 Database.prototype.getRoom = function(room_id){
 	return this.connected.then(db =>
 		new Promise((resolve, reject) => {
-			// const ObjectId = require('mongodb').ObjectId;
-            // let id;
-
-            // try {
-            //     if (room_id instanceof ObjectId) {
-            //         id = room_id;
-            //     } else {
-            //         id = new ObjectId(room_id);
-            //     }
-
-            //     db.collection('chatrooms').findOne({ _id: id }, (err, room) => {
-            //         if (err) {
-            //             reject(err);
-            //         } else {
-            //             resolve(room);
-            //         }
-            //     });
-            // } catch (error) {
-            //     reject(error);
-            // }
 			if (db) {
 				resolve(db.collection('chatrooms').findOne({ _id: room_id }));
 			} else {
@@ -76,29 +56,6 @@ Database.prototype.getRoom = function(room_id){
 		})
 	)
 }
-
-
-// Database.prototype.addRoom = function(room){
-//     if (!room.name) {
-//         return Promise.reject(new Error("Room name is required"));
-//     }
-
-//     return this.connected.then(db =>
-//         new Promise((resolve, reject) => {
-//             db.collection('chatrooms').insertOne(room)
-//             .then(result => {
-//                 db.collection('chatrooms').findOne({ _id: result.insertedId })
-//                 .then(newRoom => {
-//                     resolve(newRoom); // Return the newly added room as it is in the database
-//                 }).catch(findError => {
-//                     reject(findError);
-//                 });
-//             }).catch(insertError => {
-//                 reject(insertError);
-//             });
-//         })
-//     );
-// };
 
 Database.prototype.addRoom = function(room){
     if (!room.name) {
@@ -109,11 +66,10 @@ Database.prototype.addRoom = function(room){
         new Promise((resolve, reject) => {
             db.collection('chatrooms').insertOne(room)
             .then(result => {
-                // Fetch the newly added room as it is in the database
                 return db.collection('chatrooms').findOne({ _id: result.insertedId });
             })
             .then(newRoom => {
-                resolve(newRoom); // Return the newly added room
+                resolve(newRoom)
             })
             .catch(err => {
                 reject(err);
@@ -121,40 +77,6 @@ Database.prototype.addRoom = function(room){
         })
     );
 };
-
-
-// Database.prototype.addRoom = function(room){
-//     if (!room.name) {
-//         return Promise.reject(new Error("Room name is required"));
-//     }
-
-//     return this.connected.then(db =>
-//         new Promise((resolve, reject) => {
-//             db.collection('chatrooms').insertOne(room)
-//             .then(result => {
-//                 // Use the insertedId to fetch the newly added room
-//                 const newRoomId = result.insertedId;
-//                 db.collection('chatrooms').findOne({ _id: newRoomId })
-//                 .then(newRoom => {
-//                     resolve(newRoom); // Return the newly added room
-//                 }).catch(err => {
-//                     reject(err);
-//                 });
-//             }).catch(err => {
-//                 reject(err);
-//             });
-//         })
-//     );
-// };
-
-Database.prototype.getLastConversation = function(room_id, before){
-	return this.connected.then(db =>
-		new Promise((resolve, reject) => {
-			/* TODO: read a conversation from `db` based on the given arguments
-			 * and resolve if found */
-		})
-	)
-}
 
 Database.prototype.addConversation = function(conversation){
     if (!conversation.room_id || !conversation.timestamp || !conversation.messages) {
