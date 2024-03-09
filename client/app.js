@@ -263,8 +263,8 @@ class ChatView {
 
         room.onFetchConversation = (conversation) => {
             const hb = this.chatElem.scrollHeight;
-            conversation.messages.forEach(message => {
-                this.addMessageToChat(message);
+            conversation.messages.slice().reverse().forEach(message => {
+                this.addMessageToChat(message, true); // Assuming addMessageToChat takes a second parameter to prepend
             });
     
             let ha = this.chatElem.scrollHeight;
@@ -272,12 +272,17 @@ class ChatView {
         };
     }
 
-    addMessageToChat(message) {
+    addMessageToChat(message, prepend = false) {
         const messageElem = createDOM(`<div class="message${message.username === profile.username ? ' my-message' : ''}">
             <span class="message-user">${message.username}</span>
             <span class="message-text">${message.text}</span>
         </div>`);
-        this.chatElem.appendChild(messageElem);
+        // this.chatElem.appendChild(messageElem);
+        if (prepend) {
+            this.chatElem.insertBefore(messageElem, this.chatElem.firstChild);
+        } else {
+            this.chatElem.appendChild(messageElem);
+        }
     }
 }
 
