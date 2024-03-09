@@ -93,12 +93,12 @@ broker.on('connection', function connection(ws) {
                 const conversation = {
                     room_id: roomId,
                     timestamp: Date.now(),
-                    messages: messages[roomId].slice() // Copy the messages
+                    messages: messages[roomId].slice()
                 };
 
                 db.addConversation(conversation)
                 .then(() => {
-                    messages[roomId] = []; // Clear messages for the room after saving
+                    messages[roomId] = [];
                 }).catch(err => {
                     console.error('Error saving conversation:', err);
                 });
@@ -156,22 +156,21 @@ app.post('/chat', (req, res) => {
         return;
     }
 
-    // Count existing rooms to generate new room ID
     db.getRooms().then(existingRooms => {
-        const newRoomId = `room-${existingRooms.length + 1}`; // Generate new room ID
+        const newRoomId = `room-${existingRooms.length + 1}`;
         const newRoom = {
-            _id: newRoomId, // Assign new room ID
+            _id: newRoomId,
             name: roomData.name,
-            image: roomData.image || 'assets/default-room-icon.png' // Default image if not provided
+            image: roomData.image || 'assets/default-room-icon.png'
         };
 
-        return db.addRoom(newRoom); // Add the new room to the database
+        return db.addRoom(newRoom);
     })
     .then(addedRoom => {
-        messages[addedRoom._id] = []; // Initialize an empty array for messages in the new room
+        messages[addedRoom._id] = [];
 
         console.log("New room added successfully");
-        res.status(200).json(addedRoom); // Send back the new room data including the _id
+        res.status(200).json(addedRoom);
     })
     .catch(err => {
         console.error("Error adding new room:", err);
