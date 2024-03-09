@@ -14,12 +14,18 @@ function* makeConversationLoader(room) {
         if (room.canLoadConversation) {
             room.canLoadConversation = false;
             try {
-                const conversation = yield Service.getLastConversation(room.id, lastConversationTimestamp);
-                if (conversation) {
-                    room.addConversation(conversation);
-                    lastConversationTimestamp = conversation.timestamp;
-                    room.canLoadConversation = true;
-                }
+                Service.getLastConversation(room.id, lastConversationTimestamp)
+                    .then(conversation => {
+                        if (conversation) {
+                            room.addConversation(conversation);
+                            lastConversationTimestamp = conversation.timestamp;
+                            room.canLoadConversation = true;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading conversation:', error);
+                        room.canLoadConversation = true;
+                    });
             } catch (error) {
                 console.error('Error loading conversation:', error);
                 room.canLoadConversation = true;
