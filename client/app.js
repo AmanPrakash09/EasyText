@@ -9,27 +9,25 @@ function createDOM(htmlString) {
 }
 
 function* makeConversationLoader(room) {
-    let lastConversationTimestamp = room.messages.length > 0 ? room.messages[0].timestamp : Date.now();
-    while (true) {
-        if (room.canLoadConversation) {
-            room.canLoadConversation = false;
-            try {
-                Service.getLastConversation(room.id, lastConversationTimestamp)
-                    .then(conversation => {
-                        if (conversation) {
-                            room.addConversation(conversation);
-                            lastConversationTimestamp = conversation.timestamp;
-                            room.canLoadConversation = true;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading conversation:', error);
+    let lastConversationTimestamp = room.creationTimestamp;
+    while (room.canLoadConversation) {        
+        room.canLoadConversation = false;
+        try {
+            Service.getLastConversation(room.id, lastConversationTimestamp)
+                .then(conversation => {
+                    if (conversation) {
+                        room.addConversation(conversation);
+                        lastConversationTimestamp = conversation.timestamp;
                         room.canLoadConversation = true;
-                    });
-            } catch (error) {
-                console.error('Error loading conversation:', error);
-                room.canLoadConversation = true;
-            }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading conversation:', error);
+                    room.canLoadConversation = true;
+                });
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+            room.canLoadConversation = true;
         }
         yield new Promise(resolve => setTimeout(resolve, 1000));
     }
@@ -320,6 +318,7 @@ class Room {
         this.name = name;
         this.image = image;
         this.messages = messages;
+        this.creationTimestamp = Date.now();
         this.getLastConversation = makeConversationLoader(this);
         this.canLoadConversation = true;
     }
@@ -444,17 +443,17 @@ function main() {
     window.addEventListener('popstate', renderRoute);
 
     renderRoute();
-
-    cpen322.setDefault("testRoomId", "room-1");
-    cpen322.setDefault("image", "assets/everyone-icon.png");
-    cpen322.setDefault("webSocketServer", "ws://localhost:8000");
-
+    
     cpen322.export(arguments.callee, {
         refreshLobby: refreshLobby,
         lobby: lobby,
         socket: socket,
         chatView: chatView
     });
+
+    cpen322.setDefault("testRoomId", "room-1");
+    cpen322.setDefault("image", "assets/everyone-icon.png");
+    cpen322.setDefault("webSocketServer", "ws://localhost:8000");
 }
 
 window.addEventListener('load', main);
