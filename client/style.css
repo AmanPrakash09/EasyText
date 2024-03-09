@@ -139,6 +139,8 @@ body, html {
 
 .message-list {
     margin-bottom: 20px;
+    max-height: 70vh;
+    overflow-y: auto;
 }
 
 .message {

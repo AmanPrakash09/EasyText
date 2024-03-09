@@ -115,24 +115,6 @@ broker.on('connection', function connection(ws) {
 });
 
 // TASK 2 PART C
-// app.get('/chat', async (req, res) => {
-//     console.log("GET request received for /chat");
-    
-//     try {
-//         const rooms = await db.getRooms();
-//         const chatData = rooms.map(room => ({
-//             id: room._id,
-//             name: room.name,
-//             image: room.image,
-//             messages: messages[room._id] || []
-//         }));
-//         res.json(chatData);
-//     } catch (error) {
-//         console.error("Error handling GET request for /chat:", error);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// });
-
 app.get('/chat', async (req, res) => {
     try {
         const rooms = await db.getRooms();
@@ -225,4 +207,3 @@ app.listen(port, () => {
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a4-server.js');
 cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });
-cpen322.export(__filename, { app, db, messages, broker });

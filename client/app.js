@@ -8,36 +8,24 @@ function createDOM(htmlString) {
     return template.content.firstChild;
 }
 
-// function* makeConversationLoader(room) {
-//     let lastTimestamp = Date.now();  // Assuming the room was created now
-
-//     while (true) {
-//         const conversation = yield Service.getLastConversation(room.id, lastTimestamp);
-//         if (conversation) {
-//             lastTimestamp = conversation.timestamp - 1;
-//             room.canLoadConversation = true;
-//             room.addConversation(conversation);
-//         } else {
-//             room.canLoadConversation = false;
-//             break;
-//         }
-//     }
-// }
-
 function* makeConversationLoader(room) {
-    let lastTimestamp = Date.now();
-
+    let lastConversationTimestamp = room.messages.length > 0 ? room.messages[0].timestamp : Date.now();
     while (true) {
-        room.canLoadConversation = false;
-        const conversation = yield Service.getLastConversation(room.id, lastTimestamp);
-        if (conversation) {
-            lastTimestamp = conversation.timestamp - 1;
-            room.addConversation(conversation);
-            room.canLoadConversation = true;
-        } else {
+        if (room.canLoadConversation) {
             room.canLoadConversation = false;
-            break;
+            try {
+                const conversation = yield Service.getLastConversation(room.id, lastConversationTimestamp);
+                if (conversation) {
+                    room.addConversation(conversation);
+                    lastConversationTimestamp = conversation.timestamp;
+                    room.canLoadConversation = true;
+                }
+            } catch (error) {
+                console.error('Error loading conversation:', error);
+                room.canLoadConversation = true;
+            }
         }
+        yield new Promise(resolve => setTimeout(resolve, 1000));
     }
 }
 
@@ -46,14 +34,14 @@ let profile = {
 };
 
 let Service = {
-    origin : window.location.origin,
-    getAllRooms: function() {
+    origin: window.location.origin,
+    getAllRooms: function () {
         console.log(`Getting all the rooms from this endpoint: ${this.origin}/chat`);
-        
+
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', `${this.origin}/chat`);
-            xhr.onreadystatechange = function() {
+            xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         resolve(JSON.parse(xhr.responseText));
@@ -62,14 +50,14 @@ let Service = {
                     }
                 }
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 reject(new Error('Request failed'));
             };
-            
+
             xhr.send();
         });
     },
-    addRoom: function(data) {
+    addRoom: function (data) {
         console.log("Trying to add a room to this endpoint: " + `${this.origin}/chat`);
         const { name, image } = data;
         const bodyData = {
@@ -78,29 +66,29 @@ let Service = {
         if (image) {
             bodyData.image = image;
         }
-    
+
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', `${this.origin}/chat`);
             xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.onload = function() {
+            xhr.onload = function () {
                 if (xhr.status >= 200 && xhr.status < 300) {
                     resolve(JSON.parse(xhr.responseText));
                 } else {
                     reject(new Error(`${xhr.responseText}`));
                 }
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 reject(new Error('Request failed'));
             };
             xhr.send(JSON.stringify(bodyData));
         });
     },
-    getLastConversation: function(roomId, before) {
+    getLastConversation: function (roomId, before) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', `${this.origin}/chat/${roomId}/messages?before=${before}`);
-            xhr.onreadystatechange = function() {
+            xhr.onreadystatechange = function () {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
                         resolve(JSON.parse(xhr.responseText));
@@ -109,13 +97,13 @@ let Service = {
                     }
                 }
             };
-            xhr.onerror = function() {
+            xhr.onerror = function () {
                 reject(new Error('Request failed'));
             };
             xhr.send();
         });
     }
-    
+
 };
 
 class LobbyView {
@@ -152,17 +140,17 @@ class LobbyView {
                 name: newRoomName,
                 image: newRoomImage
             })
-            .then(newRoom => {
-                this.lobby.addRoom(newRoom.id, newRoom.name, newRoom.image);
-                this.inputElem.value = '';
-            })
-            .catch(error => {
-                console.error('Error adding room:', error);
-                const errorMessage = document.createElement('div');
-                errorMessage.textContent = `Error adding room: ${error.message}`;
-                errorMessage.classList.add('error-message');
-                this.elem.appendChild(errorMessage);
-            });
+                .then(newRoom => {
+                    this.lobby.addRoom(newRoom.id, newRoom.name, newRoom.image);
+                    this.inputElem.value = '';
+                })
+                .catch(error => {
+                    console.error('Error adding room:', error);
+                    const errorMessage = document.createElement('div');
+                    errorMessage.textContent = `Error adding room: ${error.message}`;
+                    errorMessage.classList.add('error-message');
+                    this.elem.appendChild(errorMessage);
+                });
         });
 
         this.lobby.onNewRoom = (room) => {
@@ -171,7 +159,7 @@ class LobbyView {
         };
     }
 
-    redrawList () {
+    redrawList() {
         emptyDOM(this.listElem);
 
         for (const roomId in this.lobby.rooms) {
@@ -207,7 +195,7 @@ class ChatView {
             </div>
         `);
 
-        
+
 
         this.titleElem = this.elem.querySelector('.room-name');
         this.chatElem = this.elem.querySelector('.message-list');
@@ -216,14 +204,8 @@ class ChatView {
 
         this.room = null;
 
-        this.chatElem.addEventListener('wheel', (event) => {
-            if (event.deltaY < 0 && this.chatElem.scrollTop === 0 && this.room.canLoadConversation) {
-                this.room.getLastConversation.next();
-            }
-        });
-
         this.buttonElem.addEventListener('click', () => this.sendMessage());
-    
+
         this.inputElem.addEventListener('keyup', (event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
                 this.sendMessage();
@@ -231,6 +213,12 @@ class ChatView {
         });
 
         this.socket = socket;
+
+        this.chatElem.addEventListener('wheel', (event) => {
+            if (event.deltaY < 0 && this.chatElem.scrollTop === 0 && this.room.canLoadConversation) {
+                this.room.getLastConversation.next();
+            }
+        });        
     }
 
     sendMessage() {
@@ -238,7 +226,7 @@ class ChatView {
 
         if (newMessage) {
             this.room.addMessage(profile.username, newMessage);
-            this.inputElem.value = '';        
+            this.inputElem.value = '';
         }
 
         const message = {
@@ -254,78 +242,39 @@ class ChatView {
 
         this.room = room;
         this.titleElem.textContent = room.name;
-    
+
         emptyDOM(this.chatElem);
 
         console.log("Order of messages in room.messages:", room.messages);
-    
+
         room.messages.forEach(message => {
             console.log("Adding message to chat:", message);
             this.addMessageToChat(message);
         });
-    
+
         this.room.onNewMessage = (message) => {
             console.log("New message received:", message);
             this.addMessageToChat(message);
         };
 
-        // this.room.onFetchConversation = (conversation) => {
-        //     const prevScrollHeight = this.chatElem.scrollHeight;
-
-        //     conversation.messages.forEach((message) => {
-        //         // Code snippet to create and prepend the message DOM elements
-        //         const messageElem = document.createElement('div');
-        //         messageElem.className = 'message';
-
-        //         const userElem = document.createElement('span');
-        //         userElem.className = 'message-user';
-        //         userElem.textContent = `${message.username}: `;
-
-        //         const textElem = document.createElement('span');
-        //         textElem.className = 'message-text';
-        //         textElem.textContent = message.text;
-
-        //         messageElem.appendChild(userElem);
-        //         messageElem.appendChild(textElem);
-
-        //         this.chatElem.prepend(messageElem); // Add the message at the beginning of the chat
-        //     });
-
-        //     // Adjust scroll position after prepending messages
-        //     const currentScrollHeight = this.chatElem.scrollHeight;
-        //     this.chatElem.scrollTop = currentScrollHeight - prevScrollHeight;
-        // };
-
-        this.room.onFetchConversation = (conversation) => {
-            // Store the current scroll height before adding new messages
-            const prevScrollHeight = this.chatElem.scrollHeight;
-        
-            // Prepend the messages from the conversation to the chat view
-            conversation.messages.forEach((message) => {
-                const messageElement = createDOM(`
-                    <div class="message${message.username === this.room.username ? ' my-message' : ''}">
-                        <span class="message-user">${message.username}:</span>
-                        <span class="message-text">${message.text}</span>
-                    </div>
-                `);
-                this.chatElem.prepend(messageElement);
+        room.onFetchConversation = (conversation) => {
+            const hb = this.chatElem.scrollHeight;
+            conversation.messages.forEach(message => {
+                this.addMessageToChat(message);
             });
-        
-            // Calculate the new scroll height after adding messages
-            const currentScrollHeight = this.chatElem.scrollHeight;
-        
-            // Adjust the scroll position to maintain the view on the new messages
-            this.chatElem.scrollTop = currentScrollHeight - prevScrollHeight;
+    
+            let ha = this.chatElem.scrollHeight;
+            this.chatElem.scrollTo(0, ha - hb);
         };
     }
-    
+
     addMessageToChat(message) {
         const messageElem = createDOM(`<div class="message${message.username === profile.username ? ' my-message' : ''}">
             <span class="message-user">${message.username}</span>
             <span class="message-text">${message.text}</span>
         </div>`);
         this.chatElem.appendChild(messageElem);
-    }    
+    }
 }
 
 class ProfileView {
@@ -365,9 +314,15 @@ class Room {
         this.name = name;
         this.image = image;
         this.messages = messages;
-        this.canLoadConversation = true;
         this.getLastConversation = makeConversationLoader(this);
-        
+        this.canLoadConversation = true;
+    }
+
+    addConversation(conversation) {
+        this.messages.unshift(...conversation.messages);
+        if (this.onFetchConversation) {
+            this.onFetchConversation(conversation);
+        }
     }
 
 
@@ -383,20 +338,6 @@ class Room {
 
         if (this.onNewMessage) {
             this.onNewMessage(message);
-        }
-    }
-
-    // addConversation(conversation) {
-    //     this.messages = conversation.messages.concat(this.messages);
-    //     if (this.onFetchConversation) {
-    //         this.onFetchConversation(conversation);
-    //     }
-    // }
-
-    addConversation(conversation) {
-        this.messages = [...conversation.messages, ...this.messages];
-        if (this.onFetchConversation) {
-            this.onFetchConversation(conversation);
         }
     }
 }
@@ -437,8 +378,8 @@ function main() {
     const lobbyView = new LobbyView(lobby);
     const chatView = new ChatView(socket);
     const profileView = new ProfileView();
-    
-    function refreshLobby () {
+
+    function refreshLobby() {
         Service.getAllRooms()
             .then(rooms => {
                 for (const room of rooms) {
@@ -462,16 +403,16 @@ function main() {
 
     function renderRoute() {
         console.log("Current path:", window.location.hash.substring(1));
-    
+
         const path = window.location.hash.substring(1);
         console.log("Path extracted from URL:", path);
-    
+
         const pageView = document.getElementById('page-view');
-    
+
         console.log("Page View Element:", pageView);
-    
+
         emptyDOM(pageView);
-    
+
         if (path == "" || path === "/") {
             pageView.appendChild(lobbyView.elem);
         } else if (path.startsWith("/chat")) {
@@ -493,7 +434,7 @@ function main() {
             pageView.appendChild(profileView.elem);
         }
     }
-    
+
     window.addEventListener('popstate', renderRoute);
 
     renderRoute();
