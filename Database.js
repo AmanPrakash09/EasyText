@@ -29,7 +29,6 @@ function Database(mongoUrl, dbName){
  	);
 }
 
-// TASK 2 PART A
 Database.prototype.getRooms = function() {
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
@@ -44,7 +43,6 @@ Database.prototype.getRooms = function() {
     );
 }
 
-// TASK 2 PART D
 Database.prototype.getRoom = function(room_id){
 	return this.connected.then(db =>
 		new Promise((resolve, reject) => {

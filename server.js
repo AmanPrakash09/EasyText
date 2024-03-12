@@ -3,7 +3,6 @@ const fs = require('fs');
 const express = require('express');
 const WebSocket = require('ws');
 const cpen322 = require('./cpen322-tester.js');
-// ----------------------------------------------------TASK 1----------------------------------------------------
 const Database = require('./Database.js');
 
 const mongoUrl = 'mongodb://127.0.0.1:27017';
@@ -16,8 +15,6 @@ db.connected.then(() => {
 }).catch(err => {
     console.error('[MongoClient] Connection error:', err);
 });
-
-// ----------------------------------------------------TASK 1----------------------------------------------------
 
 function logRequest(req, res, next){
 	console.log(`${new Date()}  ${req.ip} : ${req.method} ${req.path}`);
@@ -42,16 +39,8 @@ app.use(logRequest);							// logging for debug
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
 
-// let chatrooms = [
-//     { id: "room-1", name: "Room 1", image: "assets/everyone-icon.png" },
-//     { id: "room-2", name: "Room 2", image: "assets/everyone-icon.png" },
-//     { id: "room-3", name: "Room 3", image: "assets/everyone-icon.png" },
-//     { id: "room-4", name: "Room 4", image: "assets/everyone-icon.png" }
-// ];
-
 let messages = {};
 
-// TASK 2 PART B
 db.getRooms()
     .then(rooms => {
         rooms.forEach(room => {
@@ -61,10 +50,6 @@ db.getRooms()
     .catch(err => {
         console.error('Error initializing messages:', err);
     });
-
-// chatrooms.forEach(room => {
-//     messages[room.id] = [];
-// });
 
 broker.on('connection', function connection(ws) {
     console.log('Client connected');
@@ -114,7 +99,6 @@ broker.on('connection', function connection(ws) {
     });
 });
 
-// TASK 2 PART C
 app.get('/chat', async (req, res) => {
     try {
         const rooms = await db.getRooms();
@@ -133,7 +117,6 @@ app.get('/chat', async (req, res) => {
     }
 });
 
-// TASK 2 PART E
 app.get('/chat/:room_id', async (req, res) => {
     const room_id = req.params.room_id;
 	console.log("Room ID:", room_id);
@@ -204,5 +187,6 @@ app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
 
-cpen322.connect('http://3.98.223.41/cpen322/test-a4-server.js');
+cpen322.connect('http://3.98.223.41/cpen322/test-a5-server.js');
+// cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });
 cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });
