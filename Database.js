@@ -116,15 +116,12 @@ Database.prototype.getLastConversation = function(room_id, before = Date.now()){
 Database.prototype.getUser = function(username) {
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-            db.collection('users').findOne({ username: username }, (err, user) => {
-                if (err) {
-                    console.error('Error querying for user:', err);
-                    reject(err);
-                } else {
-                    resolve(user);
-                }
-            });
-        })
+			if (db) {
+				resolve(db.collection('users').findOne({ username: username }));
+			} else {
+				reject(err);
+			}
+		})
     );
 };
 

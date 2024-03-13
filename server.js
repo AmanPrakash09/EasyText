@@ -4,6 +4,8 @@ const express = require('express');
 const WebSocket = require('ws');
 const cpen322 = require('./cpen322-tester.js');
 const Database = require('./Database.js');
+const SessionManager = require('./SessionManager');
+const crypto = require('crypto');
 
 const mongoUrl = 'mongodb://127.0.0.1:27017';
 const dbName = 'cpen322-messenger';
@@ -27,14 +29,18 @@ const clientApp = path.join(__dirname, 'client');
 
 const broker = new WebSocket.Server({ port: 8000 });
 
-const messageBlockSize = 10; // Adjust as necessary
+const messageBlockSize = 10;
+
+const sessionManager = new SessionManager();
 
 // express app
 let app = express();
+const bodyParser = require('body-parser');
 
 app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debug
+app.use(bodyParser.urlencoded({ extended: true }));
 
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
@@ -98,6 +104,38 @@ broker.on('connection', function connection(ws) {
         console.log('Client disconnected');
     });
 });
+
+app.post('/login', (req, res) => {
+    const { username, password } = req.body;
+
+    db.getUser(username).then(user => {
+        if (!user) {
+            // not found --> redirect
+            res.redirect('/login');
+        } else {
+            if (isCorrectPassword(password, user.password)) {
+                // correct --> redirect
+                sessionManager.createSession(res, username);
+                res.redirect('/');
+            } else {
+                // incorrect --> redirect
+                res.redirect('/login');
+            }
+        }
+    }).catch(err => {
+        console.error(err);
+        res.status(500).send('Server error');
+    });
+});
+
+function isCorrectPassword(password, saltedHash) {
+    const salt = saltedHash.substring(0, 20);
+    const storedHash = saltedHash.substring(20);
+
+    const hash = crypto.createHash('sha256').update(password + salt).digest('base64');
+
+    return hash === storedHash;
+}
 
 app.get('/chat', async (req, res) => {
     try {
@@ -188,5 +226,4 @@ app.listen(port, () => {
 });
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a5-server.js');
-// cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });
-cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });
+cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });

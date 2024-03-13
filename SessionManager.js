@@ -27,6 +27,22 @@ function SessionManager (){
 	// this function is used by the test script.
 	// you can use it if you want.
 	this.getUsername = (token) => ((token in sessions) ? sessions[token].username : null);
+
+    this.createSession = (response, username, maxAge = CookieMaxAgeMs) => {
+        const token = crypto.randomBytes(16).toString('hex');
+
+        const session = { username, createdAt: Date.now(), maxAge };
+
+        sessions[token] = session;
+
+        response.cookie('cpen322-session', token, { maxAge, httpOnly: true });
+
+        setTimeout(() => {
+            delete sessions[token];
+        }, maxAge);
+
+        return token;
+    };
 };
 
 // SessionError class is available to other modules as "SessionManager.Error"
