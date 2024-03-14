@@ -8,16 +8,6 @@ const SessionManager = require('./SessionManager.js');
 const sessionManager = new SessionManager();
 const crypto = require('crypto');
 
-// app.get('/chat/:room_id/messages', sessionManager.middleware, chatMessagesHandler);
-// app.get('/chat/:room_id', sessionManager.middleware, chatRoomHandler);
-// app.get('/chat', sessionManager.middleware, chatHandler);
-// app.get('/profile', sessionManager.middleware, profileHandler);
-
-// app.use('/client/app.js', sessionManager.middleware, express.static(clientApp));
-// app.use('/client/index.html', sessionManager.middleware, express.static(clientApp));
-// app.use('/client/index', sessionManager.middleware, express.static(clientApp));
-// app.use('/client/', sessionManager.middleware, express.static(clientApp, { extensions: ['html'] }));
-
 const mongoUrl = 'mongodb://127.0.0.1:27017';
 const dbName = 'cpen322-messenger';
 

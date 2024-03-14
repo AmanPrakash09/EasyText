@@ -27,7 +27,7 @@ function SessionManager (){
 
 		response.cookie('cpen322-session', token, { 'maxAge': maxAge });
 
-        console.log(`Set-Cookie header: cpen322-session=${token}; Max-Age=${maxAge / 1000}; Path=/; HttpOnly; Secure; SameSite=Strict`);
+        console.log(`Set-Cookie header: cpen322-session=${token}; Max-Age=${maxAge};`);
 		console.log("username: " + sessions[token].username);
 
         setTimeout(() => {
@@ -43,7 +43,32 @@ function SessionManager (){
 	};
 
 	this.middleware = (request, response, next) => {
-		/* To be implemented */
+		console.log(request.headers);
+		const cookieHeader = request.headers.cookie;
+		if (!cookieHeader) {
+			console.log('No cookie found, skipping session validation.');
+			next(new SessionError());
+			return;
+		}
+	
+		const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+			const [key, value] = cookie.split('=').map(c => c.trim());
+			acc[key] = value;
+			console.log(key);
+			console.log(value);
+			return acc;
+		}, {});
+	
+		const token = cookies['cpen322-session'];
+		if(!token) return new SessionError();
+		if (!(token in sessions)) {
+			next(new SessionError());
+			return;
+		}
+	
+		request.username = sessions[token].username;
+		request.session = token;
+		next();
 	};
 
 	// this function is used by the test script.
