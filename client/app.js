@@ -106,6 +106,24 @@ let Service = {
             };
             xhr.send();
         });
+    },
+
+    getProfile: function () {
+        return new Promise((resolve, reject) => {
+            fetch(`${this.origin}/profile`, { credentials: 'include' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Network response was not ok.');
+                    }
+                })
+                .then(data => {
+                    profile.username = data.username; // Update the profile with fetched username
+                    resolve(data);
+                })
+                .catch(error => reject(error));
+        });
     }
 
 };
@@ -410,6 +428,8 @@ function main() {
     refreshLobby();
 
     setInterval(refreshLobby, 60000);
+
+    Service.getProfile().catch(error => console.error('Error fetching profile:', error));
 
     function renderRoute() {
         console.log("Current path:", window.location.hash.substring(1));

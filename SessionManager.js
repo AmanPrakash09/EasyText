@@ -39,7 +39,20 @@ function SessionManager (){
 	};
 
 	this.deleteSession = (request) => {
-		/* To be implemented */
+		const cookieHeader = request.headers.cookie;
+		if (cookieHeader) {
+			const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+				const [key, value] = cookie.split('=').map(c => c.trim());
+				acc[key] = value;
+				return acc;
+			}, {});
+	
+			const token = cookies['cpen322-session'];
+			if (token && sessions[token]) {
+				delete sessions[token];
+				console.log(`Session ${token} deleted.`);
+			}
+		}
 	};
 
 	this.middleware = (request, response, next) => {
