@@ -114,15 +114,19 @@ Database.prototype.getLastConversation = function(room_id, before = Date.now()){
 };
 
 Database.prototype.getUser = function(username) {
-    return this.connected.then(db =>
-        new Promise((resolve, reject) => {
-			if (db) {
-				resolve(db.collection('users').findOne({ username: username }));
-			} else {
-				reject(err);
-			}
-		})
-    );
+    console.log(`getUser called with username: ${username}`);
+    return this.connected.then(db => {
+        console.log('Connected to database, querying for user');
+        return db.collection('users').findOne({ username: username })
+            .then(user => {
+                console.log(`User found: ${user}`);
+                return user;
+            })
+            .catch(err => {
+                console.error('Error fetching user:', err);
+                throw err;
+            });
+    });
 };
 
 module.exports = Database;

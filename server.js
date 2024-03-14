@@ -4,8 +4,19 @@ const express = require('express');
 const WebSocket = require('ws');
 const cpen322 = require('./cpen322-tester.js');
 const Database = require('./Database.js');
-const SessionManager = require('./SessionManager');
+const SessionManager = require('./SessionManager.js');
+const sessionManager = new SessionManager();
 const crypto = require('crypto');
+
+// app.get('/chat/:room_id/messages', sessionManager.middleware, chatMessagesHandler);
+// app.get('/chat/:room_id', sessionManager.middleware, chatRoomHandler);
+// app.get('/chat', sessionManager.middleware, chatHandler);
+// app.get('/profile', sessionManager.middleware, profileHandler);
+
+// app.use('/client/app.js', sessionManager.middleware, express.static(clientApp));
+// app.use('/client/index.html', sessionManager.middleware, express.static(clientApp));
+// app.use('/client/index', sessionManager.middleware, express.static(clientApp));
+// app.use('/client/', sessionManager.middleware, express.static(clientApp, { extensions: ['html'] }));
 
 const mongoUrl = 'mongodb://127.0.0.1:27017';
 const dbName = 'cpen322-messenger';
@@ -31,19 +42,27 @@ const broker = new WebSocket.Server({ port: 8000 });
 
 const messageBlockSize = 10;
 
-const sessionManager = new SessionManager();
-
 // express app
 let app = express();
-const bodyParser = require('body-parser');
 
 app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debug
-app.use(bodyParser.urlencoded({ extended: true }));
 
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
+app.use((err, req, res, next) => {
+    if (err instanceof SessionManager.Error) {
+        if (req.headers.accept === 'application/json') {
+            res.status(401).json({ error: err.message });
+        } else {
+            res.redirect('/login');
+        }
+    } else {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 let messages = {};
 
@@ -105,37 +124,27 @@ broker.on('connection', function connection(ws) {
     });
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
-    db.getUser(username).then(user => {
+    try {
+        const user = await db.getUser(username);
+        
         if (!user) {
-            // not found --> redirect
             res.redirect('/login');
         } else {
             if (isCorrectPassword(password, user.password)) {
-                // correct --> redirect
                 sessionManager.createSession(res, username);
                 res.redirect('/');
             } else {
-                // incorrect --> redirect
                 res.redirect('/login');
             }
         }
-    }).catch(err => {
+    } catch (err) {
         console.error(err);
-        res.status(500).send('Server error');
-    });
+        res.status(500).send('Internal Server Error');
+    }
 });
-
-function isCorrectPassword(password, saltedHash) {
-    const salt = saltedHash.substring(0, 20);
-    const storedHash = saltedHash.substring(20);
-
-    const hash = crypto.createHash('sha256').update(password + salt).digest('base64');
-
-    return hash === storedHash;
-}
 
 app.get('/chat', async (req, res) => {
     try {
@@ -218,7 +227,12 @@ app.get('/chat/:room_id/messages', (req, res) => {
 });
 
 
-
+function isCorrectPassword(password, saltedHash) {
+    const salt = saltedHash.substring(0, 20);
+    const originalHash = saltedHash.substring(20);
+    const hash = crypto.createHash('sha256').update(password + salt).digest('base64');
+    return hash === originalHash;
+}
 
 
 app.listen(port, () => {
@@ -227,3 +241,4 @@ app.listen(port, () => {
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a5-server.js');
 cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });
+// cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });
