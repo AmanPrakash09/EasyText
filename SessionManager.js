@@ -47,7 +47,7 @@ function SessionManager (){
 		const cookieHeader = request.headers.cookie;
 		if (!cookieHeader) {
 			console.log('No cookie found, skipping session validation.');
-			next(new SessionError());
+			next(new SessionError("No cookie header found."));
 			return;
 		}
 	
@@ -60,15 +60,18 @@ function SessionManager (){
 		}, {});
 	
 		const token = cookies['cpen322-session'];
-		if(!token) return new SessionError();
-		if (!(token in sessions)) {
-			next(new SessionError());
+		if (!token || !(token in sessions)) {
+			next(new SessionError("Invalid or missing session token."));
 			return;
 		}
 	
 		request.username = sessions[token].username;
 		request.session = token;
 		next();
+	};
+
+	this.isValidSession = (token) => {
+        return token in sessions && sessions[token].expiresAt > Date.now();
 	};
 
 	// this function is used by the test script.

@@ -66,53 +66,106 @@ db.getRooms()
         console.error('Error initializing messages:', err);
     });
 
-broker.on('connection', function connection(ws) {
-    console.log('Client connected');
-
-    ws.on('message', function incoming(message) {
-        console.log('Received message:', message);
-        
-		try {
-			const parsedMessage = JSON.parse(message);
-			const { roomId, username, text } = parsedMessage;
-			const serializedMessage = JSON.stringify({ roomId, username, text });
-
-			if (!messages[roomId]) {
-				messages[roomId] = [];
-			}
-			messages[roomId].push({ username, text });
-
-			broker.clients.forEach(function each(client) {
-				if (client !== ws && client.readyState === WebSocket.OPEN) {
-                    console.log('Broadcasting message to client');
-					client.send(serializedMessage);
-				}
-			});
-
-            if (messages[roomId].length === messageBlockSize) {
-                const conversation = {
-                    room_id: roomId,
-                    timestamp: Date.now(),
-                    messages: messages[roomId].slice()
-                };
-
-                db.addConversation(conversation)
-                .then(() => {
-                    messages[roomId] = [];
-                }).catch(err => {
-                    console.error('Error saving conversation:', err);
+    broker.on('connection', function connection(ws, req) {
+        console.log('Client connected');
+    
+        // Parse cookies from request
+        const cookieHeader = req.headers.cookie;
+        if (!cookieHeader) {
+            console.log('No cookie header, closing WebSocket connection.');
+            ws.close();
+            return;
+        }
+    
+        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+            const [name, value] = cookie.split('=').map(c => c.trim());
+            acc[name] = value;
+            return acc;
+        }, {});
+    
+        const sessionToken = cookies['cpen322-session']; // Adjust this based on your cookie name
+        if (!sessionManager.isValidSession(sessionToken)) {
+            console.log('Invalid session, closing WebSocket connection.');
+            ws.close();
+            return;
+        }
+    
+        ws.username = sessionManager.getUsername(sessionToken);
+    
+        ws.on('message', function incoming(message) {
+            console.log('Received message:', message);
+    
+            try {
+                let parsedMessage = JSON.parse(message);
+                parsedMessage.username = ws.username; // Use the username from the session
+    
+                const serializedMessage = JSON.stringify(parsedMessage);
+    
+                // Broadcast to other clients
+                broker.clients.forEach(function each(client) {
+                    if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        client.send(serializedMessage);
+                    }
                 });
+    
+                if (!messages[roomId]) {
+                    messages[roomId] = [];
+                }
+                messages[roomId].push({ username, text });
+    
+                broker.clients.forEach(function each(client) {
+                    if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        console.log('Broadcasting message to client');
+                        client.send(serializedMessage);
+                    }
+                });
+    
+                if (messages[roomId].length === messageBlockSize) {
+                    const conversation = {
+                        room_id: roomId,
+                        timestamp: Date.now(),
+                        messages: messages[roomId].slice()
+                    };
+    
+                    db.addConversation(conversation)
+                    .then(() => {
+                        messages[roomId] = [];
+                    }).catch(err => {
+                        console.error('Error saving conversation:', err);
+                    });
+                }
+    
+            } catch (error) {
+                console.error('Error parsing incoming message:', error);
             }
-
-		} catch (error) {
-            console.error('Error parsing incoming message:', error);
+        });
+    
+        ws.on('close', function () {
+            console.log('Client disconnected');
+        });
+    });
+    
+    app.post('/login', async (req, res) => {
+        const { username, password } = req.body;
+    
+        try {
+            const user = await db.getUser(username);
+            
+            if (!user) {
+                res.redirect('/login');
+            } else {
+                if (isCorrectPassword(password, user.password)) {
+                    sessionManager.createSession(res, username);
+                    res.redirect('/');
+                } else {
+                    res.redirect('/login');
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            res.status(500).send('Internal Server Error');
         }
     });
-
-	ws.on('close', function () {
-        console.log('Client disconnected');
-    });
-});
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
