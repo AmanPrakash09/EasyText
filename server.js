@@ -6,6 +6,7 @@ const cpen322 = require('./cpen322-tester.js');
 const Database = require('./Database.js');
 const SessionManager = require('./SessionManager.js');
 const sessionManager = new SessionManager();
+const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 
 // app.get('/chat/:room_id/messages', sessionManager.middleware, chatMessagesHandler);
@@ -51,6 +52,7 @@ app.use(logRequest);							// logging for debug
 
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
+app.use(cookieParser());
 app.use((err, req, res, next) => {
     if (err instanceof SessionManager.Error) {
         if (req.headers.accept === 'application/json') {
@@ -241,4 +243,3 @@ app.listen(port, () => {
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a5-server.js');
 cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });
-// cpen322.export(__filename, { app, db, messages, messageBlockSize, broker });

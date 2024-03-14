@@ -14,6 +14,10 @@ function SessionManager (){
 	// as anonymous functions (per each instance) and not as prototype methods
 	this.createSession = (response, username, maxAge = CookieMaxAgeMs) => {
 		const token = crypto.randomBytes(16).toString('hex');
+
+		if (maxAge) {
+			console.log(maxAge);
+		}
         
         sessions[token] = {
             username: username,
@@ -21,12 +25,10 @@ function SessionManager (){
             expiresAt: Date.now() + maxAge
         };
 
-        response.cookie('cpen322-session', token, {
-            maxAge: maxAge,
-            httpOnly: true
-        });
+		response.cookie('cpen322-session', token, { 'maxAge': maxAge });
 
         console.log(`Set-Cookie header: cpen322-session=${token}; Max-Age=${maxAge / 1000}; Path=/; HttpOnly; Secure; SameSite=Strict`);
+		console.log("username: " + sessions[token].username);
 
         setTimeout(() => {
             console.log(`Deleting session for token: ${token}`);
@@ -41,25 +43,7 @@ function SessionManager (){
 	};
 
 	this.middleware = (request, response, next) => {
-		const cookieHeader = req.headers.cookie;
-		if (!cookieHeader) {
-			return next(new SessionManager.Error("No cookie found"));
-		}
-	
-		const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-			const [key, value] = cookie.trim().split('=');
-			acc[key] = value;
-			return acc;
-		}, {});
-	
-		const token = cookies['cpen322-session'];
-		if (!token || !(token in this.sessions)) {
-			return next(new SessionManager.Error("Invalid session token"));
-		}
-	
-		req.username = this.sessions[token].username;
-		req.session = token;
-		next();
+		/* To be implemented */
 	};
 
 	// this function is used by the test script.
