@@ -32,60 +32,12 @@ const broker = new WebSocket.Server({ port: 8000 });
 
 const messageBlockSize = 10;
 
-// Cookie parsing middleware
-// const parseCookies = (req, res, next) => {
-//     const cookieHeader = req.headers.cookie;
-//     if (cookieHeader) {
-//         const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-//             const [key, value] = cookie.split('=').map(c => c.trim());
-//             acc[key] = decodeURIComponent(value);
-//             return acc;
-//         }, {});
-//         req.cookies = cookies;
-//     } else {
-//         req.cookies = {};
-//     }
-//     next();
-// };
-
-
-
 // express app
 let app = express();
 
 app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debug
-
-// // logging session manager
-// app.use((req, res, next) => {
-//     console.log(`${new Date()}  ${req.ip} : ${req.method} ${req.path}`);
-//     next();
-// });
-
-// app.use('/login.html', express.static(clientApp + '/login.html'));
-// app.use('/style.css', express.static(path.join(clientApp + 'style.css')));
-
-// serve static files (client-side)
-// app.use('/', express.static(clientApp, { extensions: ['html'] }));
-// app.use((err, req, res, next) => {
-//     if (err instanceof SessionManager.Error) {
-//         if (req.headers.accept === 'application/json') {
-//             res.status(401).json({ error: err.message });
-//         } else {
-//             res.redirect('/login');
-//         }
-//     } else {
-//         console.error(err);
-//         res.status(500).send('Internal Server Error');
-//     }
-// });
-
-// const protectRoute = (req, res, next) => sessionManager.middleware(req, res, next);
-
-// Protected routes
-// app.use('/app.js', express.static(path.join(clientApp, 'app.js')));
-// app.use('/', sessionManager.middleware, express.static(clientApp));
 
 let messages = {};
 
@@ -203,68 +155,6 @@ app.post('/login', async (req, res) => {
 app.use('/login', express.static(clientApp + '/login.html', {extensions: ['html', 'css']}));
 app.use('/', sessionManager.middleware, express.static(clientApp, {extensions: ['html', 'css']}));
 
-// app.get('/chat', sessionManager.middleware, async (req, res) => {
-//     try {
-//         const rooms = await db.getRooms();
-//         const chatData = rooms.map(room => {
-//             return {
-//                 id: room._id,
-//                 name: room.name,
-//                 image: room.image,
-//                 messages: messages[room._id] || []
-//             };
-//         });
-//         res.json(chatData);
-//     } catch (error) {
-//         console.error("Error handling GET request for /chat:", error);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     }
-// });
-
-// app.get('/chat/:room_id', sessionManager.middleware, async (req, res) => {
-//     const room_id = req.params.room_id;
-// 	console.log("Room ID:", room_id);
-
-// 	let room = await db.getRoom(room_id);
-// 	if (room) {
-// 		res.json(room);
-// 	} else {
-// 		res.status(404).json({ error: `Room ${room_id} was not found` });
-// 	}
-// });
-
-// app.post('/chat', sessionManager.middleware, (req, res) => {
-//     console.log("Received POST request to /chat with data:", req.body);
-//     const roomData = req.body;
-
-//     if (!roomData || !roomData.name) {
-//         console.error("Name field is required");
-//         res.status(400).json({ error: 'Name field is required' });
-//         return;
-//     }
-
-//     db.getRooms().then(existingRooms => {
-//         const newRoomId = `room-${existingRooms.length + 1}`;
-//         const newRoom = {
-//             _id: newRoomId,
-//             name: roomData.name,
-//             image: roomData.image || 'assets/default-room-icon.png'
-//         };
-
-//         return db.addRoom(newRoom);
-//     })
-//     .then(addedRoom => {
-//         messages[addedRoom._id] = [];
-
-//         console.log("New room added successfully");
-//         res.status(200).json(addedRoom);
-//     })
-//     .catch(err => {
-//         console.error("Error adding new room:", err);
-//         res.status(500).json({ error: 'Internal Server Error' });
-//     });
-// });
-
 app.get('/chat/:room_id/messages', sessionManager.middleware, (req, res) => {
     const room_id = req.params.room_id;
     const before = req.query.before ? parseInt(req.query.before) : Date.now();
@@ -345,9 +235,9 @@ app.get('/chat', sessionManager.middleware, async (req, res) => {
     }
 });
 
-app.get('/profile', sessionManager.middleware, (req, res) => {
-    // Task 6
-});
+// app.get('/profile', sessionManager.middleware, (req, res) => {
+//     // Task 6
+// });
 
 // app.use('/app.js', sessionManager.middleware, express(clientApp + '/app.js'));
 // app.route("/app.js").all(sessionManager.middleware);
