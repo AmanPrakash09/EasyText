@@ -23,11 +23,27 @@
               <span>Profile</span>
             </a>
           </li>
+          <li class="menu-item">
+            <!-- Sign Out Button -->
+            <button id="signOutButton">
+              <img src="./assets/sign-out-button.jpg" alt="Sign Out Icon">
+              <span>Sign Out</span>
+            </button>
+          </li>
       </ul>
 
       <div id="page-view">
       </div>
     </div>
+
+    <!-- JavaScript for handling sign out -->
+    <script>
+      document.getElementById('signOutButton').addEventListener('click', function() {
+          fetch('/logout')
+              .then(() => {
+                  window.location.href = '/login';
+              });
+      });
+    </script>
   </body>
 </html>
-
