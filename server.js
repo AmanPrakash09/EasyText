@@ -41,6 +41,15 @@ app.use(logRequest);							// logging for debug
 
 let messages = {};
 
+function sanitizeString(str) {
+    return str.replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;')
+              .replace(/&(?!(amp;|lt;|gt;|quot;|apos;|#039;))/g, '&amp;');
+}
+
+
 db.getRooms()
     .then(rooms => {
         rooms.forEach(room => {
@@ -78,10 +87,12 @@ db.getRooms()
         ws.username = sessionManager.getUsername(sessionToken);
     
         ws.on('message', function incoming(message) {
+            
             console.log('Received message:', message);
     
             try {
                 let parsedMessage = JSON.parse(message);
+                parsedMessage.text = sanitizeString(parsedMessage.text);
                 parsedMessage.username = ws.username;
     
                 const serializedMessage = JSON.stringify(parsedMessage);
@@ -110,6 +121,8 @@ db.getRooms()
                         timestamp: Date.now(),
                         messages: messages[roomId].slice()
                     };
+
+                    // messages.text = sanitizeString(messages.text);
     
                     db.addConversation(conversation)
                     .then(() => {
@@ -187,12 +200,16 @@ app.get('/chat/:room_id', sessionManager.middleware, async (req, res) => {
 app.post('/chat', sessionManager.middleware, (req, res) => {
     console.log("Received POST request to /chat with data:", req.body);
     const roomData = req.body;
+    roomData.name = sanitizeString(roomData.name);
+    
 
     if (!roomData || !roomData.name) {
         console.error("Name field is required");
         res.status(400).json({ error: 'Name field is required' });
         return;
     }
+
+    
 
     db.getRooms().then(existingRooms => {
         const newRoomId = `room-${existingRooms.length + 1}`;

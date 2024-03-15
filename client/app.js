@@ -204,10 +204,13 @@ class LobbyView {
 // }
 
 function sanitizeString(str) {
-    let div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
+    return str.replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#039;')
+              .replace(/&(?!(amp;|lt;|gt;|quot;|apos;|#039;))/g, '&amp;');
 }
+
 
 class ChatView {
     constructor(socket) {
