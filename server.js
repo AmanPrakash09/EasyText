@@ -32,12 +32,32 @@ const broker = new WebSocket.Server({ port: 8000 });
 
 const messageBlockSize = 10;
 
+// Cookie parsing middleware
+// const parseCookies = (req, res, next) => {
+//     const cookieHeader = req.headers.cookie;
+//     if (cookieHeader) {
+//         const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+//             const [key, value] = cookie.split('=').map(c => c.trim());
+//             acc[key] = decodeURIComponent(value);
+//             return acc;
+//         }, {});
+//         req.cookies = cookies;
+//     } else {
+//         req.cookies = {};
+//     }
+//     next();
+// };
+
+
+
 // express app
 let app = express();
 
 app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debug
+
+// app.use(parseCookies);
 
 // serve static files (client-side)
 app.use('/', express.static(clientApp, { extensions: ['html'] }));
