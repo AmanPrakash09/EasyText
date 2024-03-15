@@ -269,6 +269,15 @@ app.get('/chat/:room_id/messages', (req, res) => {
     });
 });
 
+app.get('/profile', sessionManager.middleware, (req, res) => {
+    res.json({ username: req.username });
+});
+
+app.get('/logout', (req, res) => {
+    sessionManager.deleteSession(req);
+    res.redirect('/login');
+});
+
 
 function isCorrectPassword(password, saltedHash) {
     const salt = saltedHash.substring(0, 20);

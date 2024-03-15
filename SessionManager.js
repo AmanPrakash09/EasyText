@@ -38,20 +38,29 @@ function SessionManager (){
         return token;
 	};
 
-	this.deleteSession = (request) => {
-		const cookieHeader = request.headers.cookie;
-		if (cookieHeader) {
-			const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-				const [key, value] = cookie.split('=').map(c => c.trim());
-				acc[key] = value;
-				return acc;
-			}, {});
+	// this.deleteSession = (request) => {
+	// 	const cookieHeader = request.headers.cookie;
+	// 	if (cookieHeader) {
+	// 		const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+	// 			const [key, value] = cookie.split('=').map(c => c.trim());
+	// 			acc[key] = value;
+	// 			return acc;
+	// 		}, {});
 	
-			const token = cookies['cpen322-session'];
-			if (token && sessions[token]) {
-				delete sessions[token];
-				console.log(`Session ${token} deleted.`);
-			}
+	// 		const token = cookies['cpen322-session'];
+	// 		if (token && sessions[token]) {
+	// 			delete sessions[token];
+	// 			console.log(`Session ${token} deleted.`);
+	// 		}
+	// 	}
+	// };
+
+	this.deleteSession = function(request) {
+		const sessionId = request.cookies['cpen322-session']; // Use the correct cookie name
+		if (sessionId && this.sessions[sessionId]) {
+			delete this.sessions[sessionId];
+			delete request.session;
+			delete request.username;
 		}
 	};
 
