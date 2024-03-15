@@ -68,7 +68,7 @@ db.getRooms()
             return acc;
         }, {});
     
-        const sessionToken = cookies['cpen322-session']; // Adjust this based on your cookie name
+        const sessionToken = cookies['cpen322-session'];
         if (!sessionManager.isValidSession(sessionToken)) {
             console.log('Invalid session, closing WebSocket connection.');
             ws.close();
@@ -82,11 +82,10 @@ db.getRooms()
     
             try {
                 let parsedMessage = JSON.parse(message);
-                parsedMessage.username = ws.username; // Use the username from the session
+                parsedMessage.username = ws.username;
     
                 const serializedMessage = JSON.stringify(parsedMessage);
     
-                // Broadcast to other clients
                 broker.clients.forEach(function each(client) {
                     if (client !== ws && client.readyState === WebSocket.OPEN) {
                         client.send(serializedMessage);
@@ -235,26 +234,14 @@ app.get('/chat', sessionManager.middleware, async (req, res) => {
     }
 });
 
-// app.get('/profile', sessionManager.middleware, (req, res) => {
-//     // Task 6
-// });
-
-// app.use('/app.js', sessionManager.middleware, express(clientApp + '/app.js'));
-// app.route("/app.js").all(sessionManager.middleware);
 '/app.js', sessionManager.middleware, express.static(path.join(clientApp, 'app.js'));
 
-// app.use('/index.html', sessionManager.middleware, express(clientApp + '/index.html'));
-// app.route("/index.html").all(sessionManager.middleware);
 '/index.html', sessionManager.middleware, express.static(path.join(clientApp, 'index.html'));
 
-// app.use('/index', sessionManager.middleware, express(clientApp + '/index'));
-// app.route("/index").all(sessionManager.middleware);
 '/index', sessionManager.middleware, express.static(path.join(clientApp, 'index'));
 
-// app.route("/").all(sessionManager.middleware);
 '/', sessionManager.middleware, express.static(path.join(clientApp));
 
-// app.use('/', sessionManager.middleware, express.static(clientApp));
 app.use((err, req, res, next) => {
     if (err instanceof SessionManager.Error) {
         if (req.headers.accept == 'application/json') {
@@ -288,8 +275,6 @@ function isCorrectPassword(password, saltedHash) {
 app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
-
-// logout
 
 cpen322.connect('http://3.98.223.41/cpen322/test-a5-server.js');
 cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });
