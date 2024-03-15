@@ -200,7 +200,6 @@ app.get('/chat/:room_id', sessionManager.middleware, async (req, res) => {
 app.post('/chat', sessionManager.middleware, (req, res) => {
     console.log("Received POST request to /chat with data:", req.body);
     const roomData = req.body;
-    roomData.name = sanitizeString(roomData.name);
     
 
     if (!roomData || !roomData.name) {
@@ -208,6 +207,7 @@ app.post('/chat', sessionManager.middleware, (req, res) => {
         res.status(400).json({ error: 'Name field is required' });
         return;
     }
+    roomData.name = sanitizeString(roomData.name);
 
     
 
