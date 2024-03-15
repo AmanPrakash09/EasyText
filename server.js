@@ -177,28 +177,6 @@ db.getRooms()
             console.log('Client disconnected');
         });
     });
-    
-    app.post('/login', async (req, res) => {
-        const { username, password } = req.body;
-    
-        try {
-            const user = await db.getUser(username);
-            
-            if (!user) {
-                res.redirect('/login');
-            } else {
-                if (isCorrectPassword(password, user.password)) {
-                    sessionManager.createSession(res, username);
-                    res.redirect('/');
-                } else {
-                    res.redirect('/login');
-                }
-            }
-        } catch (err) {
-            console.error(err);
-            res.status(500).send('Internal Server Error');
-        }
-    });
 
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
