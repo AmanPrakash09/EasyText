@@ -38,8 +38,30 @@ function SessionManager (){
         return token;
 	};
 
-	this.deleteSession = (request) => {
-		/* To be implemented */
+	// this.deleteSession = (request) => {
+	// 	const cookieHeader = request.headers.cookie;
+	// 	if (cookieHeader) {
+	// 		const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
+	// 			const [key, value] = cookie.split('=').map(c => c.trim());
+	// 			acc[key] = value;
+	// 			return acc;
+	// 		}, {});
+	
+	// 		const token = cookies['cpen322-session'];
+	// 		if (token && sessions[token]) {
+	// 			delete sessions[token];
+	// 			console.log(`Session ${token} deleted.`);
+	// 		}
+	// 	}
+	// };
+
+	this.deleteSession = function(request) {
+		const sessionId = request.cookies['cpen322-session']; // Use the correct cookie name
+		if (sessionId && this.sessions[sessionId]) {
+			delete this.sessions[sessionId];
+			delete request.session;
+			delete request.username;
+		}
 	};
 
 	this.middleware = (request, response, next) => {
@@ -47,7 +69,7 @@ function SessionManager (){
 		const cookieHeader = request.headers.cookie;
 		if (!cookieHeader) {
 			console.log('No cookie found, skipping session validation.');
-			next(new SessionError());
+			next(new SessionError("No cookie header found."));
 			return;
 		}
 	
@@ -60,15 +82,18 @@ function SessionManager (){
 		}, {});
 	
 		const token = cookies['cpen322-session'];
-		if(!token) return new SessionError();
-		if (!(token in sessions)) {
-			next(new SessionError());
+		if (!token || !(token in sessions)) {
+			next(new SessionError("Invalid or missing session token."));
 			return;
 		}
 	
 		request.username = sessions[token].username;
 		request.session = token;
 		next();
+	};
+
+	this.isValidSession = (token) => {
+        return token in sessions && sessions[token].expiresAt > Date.now();
 	};
 
 	// this function is used by the test script.

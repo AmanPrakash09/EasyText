@@ -106,6 +106,24 @@ let Service = {
             };
             xhr.send();
         });
+    },
+
+    getProfile: function () {
+        return new Promise((resolve, reject) => {
+            fetch(`${this.origin}/profile`, { credentials: 'include' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Network response was not ok.');
+                    }
+                })
+                .then(data => {
+                    profile.username = data.username; // Update the profile with fetched username
+                    resolve(data);
+                })
+                .catch(error => reject(error));
+        });
     }
 
 };
@@ -173,6 +191,22 @@ class LobbyView {
             this.listElem.appendChild(listItem);
         }
     }
+}
+
+///
+
+// function sanitizeString(str) {
+//     return str.replace(/&/g, '&amp;')
+//               .replace(/</g, '&lt;')
+//               .replace(/>/g, '&gt;')
+//               .replace(/"/g, '&quot;')
+//               .replace(/'/g, '&#039;');
+// }
+
+function sanitizeString(str) {
+    let div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 class ChatView {
@@ -273,6 +307,7 @@ class ChatView {
     }
 
     addMessageToChat(message, prepend = false) {
+        message.text = sanitizeString(message.text);
         const messageElem = createDOM(`<div class="message${message.username === profile.username ? ' my-message' : ''}">
             <span class="message-user">${message.username}</span>
             <span class="message-text">${message.text}</span>
@@ -411,6 +446,12 @@ function main() {
 
     setInterval(refreshLobby, 60000);
 
+    Service.getProfile()
+        .then(() => {
+            console.log('Profile updated:', profile);
+        })
+        .catch(error => console.error('Error fetching profile:', error));
+
     function renderRoute() {
         console.log("Current path:", window.location.hash.substring(1));
 
@@ -444,6 +485,9 @@ function main() {
             pageView.appendChild(profileView.elem);
         }
     }
+
+    
+
 
     window.addEventListener('popstate', renderRoute);
 
