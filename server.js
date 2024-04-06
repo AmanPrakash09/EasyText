@@ -49,6 +49,32 @@ function sanitizeString(str) {
               .replace(/&(?!(amp;|lt;|gt;|quot;|apos;|#039;))/g, '&amp;');
 }
 
+function saveConversationIfNecessary(roomId, ws = null) {
+    if (messages[roomId] && messages[roomId].length > 0) {
+        if (messages[roomId].length >= messageBlockSize || ws == null) {
+            const conversation = {
+                room_id: roomId,
+                timestamp: Date.now(),
+                messages: messages[roomId].slice()
+            };
+
+            db.addConversation(conversation)
+            .then(() => {
+                console.log('Conversation saved for room:', roomId);
+                messages[roomId] = [];
+            })
+            .catch(err => {
+                console.error('Error saving conversation for room:', roomId, err);
+            });
+        } else if (ws) {
+            // timeout to save messages if block size is not reached within a 10 seconds
+            clearTimeout(ws.saveConversationTimeout);
+            ws.saveConversationTimeout = setTimeout(() => {
+                saveConversationIfNecessary(roomId);
+            }, 10000);
+        }
+    }
+}
 
 db.getRooms()
     .then(rooms => {
@@ -117,21 +143,7 @@ db.getRooms()
                     }
                 });
     
-                if (messages[roomId].length === messageBlockSize) {
-                    const conversation = {
-                        room_id: roomId,
-                        timestamp: Date.now(),
-                        messages: messages[roomId].slice()
-                    };
-    
-                    db.addConversation(conversation)
-                    .then(() => {
-                        messages[roomId] = [];
-                        console.log('Adding conversation to db');
-                    }).catch(err => {
-                        console.error('Error saving conversation:', err);
-                    });
-                }
+                saveConversationIfNecessary(roomId, ws);
     
             } catch (error) {
                 console.error('Error parsing incoming message:', error);
@@ -139,6 +151,7 @@ db.getRooms()
         });
     
         ws.on('close', function () {
+            saveConversationIfNecessary(ws.roomId);
             console.log('Client disconnected');
         });
     });
