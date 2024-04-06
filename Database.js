@@ -58,20 +58,41 @@ Database.prototype.getRoom = function(room_id){
 Database.prototype.addRoom = function(room){
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-			if (db) {
-				if (!room.name) {
-					reject(new Error('dne'));
-				} else {
-					if (!room._id) {
-						room._id = new ObjectId().toString();
-					}
-					db.collection('chatrooms').insertOne(room);
-					resolve(room);
-				}
-			} else {
-				reject(err);
-			}
+            if (db) {
+                if (!room.name) {
+                    reject(new Error('Name field is required for a new room'));
+                } else {
+                    const newRoomId = `room-${this.getNextRoomId()}`;
+                    room._id = room._id || newRoomId;
+                    db.collection('chatrooms').insertOne(room).then(result => {
+                        resolve(room);
+                    }).catch(err => {
+                        reject(err);
+                    });
+                }
+            } else {
+                reject(new Error('Database not connected'));
+            }
         })
+    );
+};
+
+Database.prototype.getNextRoomId = function() {
+    return this.connected.then(db => 
+        db.collection('chatrooms').find({})
+            .sort({ _id: -1 })
+            .limit(1)
+            .toArray()
+            .then(rooms => {
+                if (rooms.length > 0) {
+                    const lastRoomId = rooms[0]._id;
+                    const match = lastRoomId.match(/room-(\d+)/);
+                    if (match && match[1]) {
+                        return `room-${parseInt(match[1]) + 1}`;
+                    }
+                }
+                return 'room-1';
+            })
     );
 };
 
@@ -86,11 +107,14 @@ Database.prototype.addConversation = function(conversation){
             .then(result => {
                 db.collection('conversations').findOne({ _id: result.insertedId })
                 .then(newConversation => {
+                    console.log(newConversation);
                     resolve(newConversation);
                 }).catch(findError => {
+                    console.error(findError);
                     reject(findError);
                 });
             }).catch(insertError => {
+                console.error(insertError);
                 reject(insertError);
             });
         })
@@ -100,7 +124,8 @@ Database.prototype.addConversation = function(conversation){
 Database.prototype.getLastConversation = function(room_id, before = Date.now()){
     return this.connected.then(db =>
         new Promise((resolve, reject) => {
-            db.collection('conversations').find({ room_id: room_id, timestamp: { $lt: before } })
+            console.log("YOOOOOOOOOOOOOOOOOOOOOOO: " + room_id);
+            db.collection('conversations').find({ room_id: room_id.toString(), timestamp: { $lt: before } })
             .sort({ timestamp: -1 })
             .limit(1)
             .toArray()

@@ -10,15 +10,19 @@ function createDOM(htmlString) {
 
 function* makeConversationLoader(room) {
     let lastConversationTimestamp = room.creationTimestamp;
-    while (room.canLoadConversation) {        
+    while (room.canLoadConversation) {
+        console.log('Attempting to load conversation for room:', room.id);
         room.canLoadConversation = false;
         try {
-            Service.getLastConversation(room.id, lastConversationTimestamp)
+            yield Service.getLastConversation(room.id, lastConversationTimestamp)
                 .then(conversation => {
+                    console.log('Conversation fetched:', conversation);
                     if (conversation) {
                         room.addConversation(conversation);
                         lastConversationTimestamp = conversation.timestamp;
                         room.canLoadConversation = true;
+                    } else {
+                        console.log('No more conversations to load.');
                     }
                 })
                 .catch(error => {
@@ -89,6 +93,7 @@ let Service = {
         });
     },
     getLastConversation: function (roomId, before) {
+        console.log('Client is asking for the last conversation!');
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', `${this.origin}/chat/${roomId}/messages?before=${before}`);
@@ -119,7 +124,7 @@ let Service = {
                     }
                 })
                 .then(data => {
-                    profile.username = data.username; // Update the profile with fetched username
+                    profile.username = data.username;
                     resolve(data);
                 })
                 .catch(error => reject(error));
@@ -192,16 +197,6 @@ class LobbyView {
         }
     }
 }
-
-///
-
-// function sanitizeString(str) {
-//     return str.replace(/&/g, '&amp;')
-//               .replace(/</g, '&lt;')
-//               .replace(/>/g, '&gt;')
-//               .replace(/"/g, '&quot;')
-//               .replace(/'/g, '&#039;');
-// }
 
 function sanitizeString(str) {
     return str.replace(/</g, '&lt;')
@@ -301,12 +296,15 @@ class ChatView {
         room.onFetchConversation = (conversation) => {
             const hb = this.chatElem.scrollHeight;
             conversation.messages.slice().reverse().forEach(message => {
-                this.addMessageToChat(message, true); // Assuming addMessageToChat takes a second parameter to prepend
+                this.addMessageToChat(message, true);
             });
     
             let ha = this.chatElem.scrollHeight;
             this.chatElem.scrollTo(0, ha - hb);
         };
+        
+        room.getLastConversation = makeConversationLoader(room);
+        room.getLastConversation.next();
     }
 
     addMessageToChat(message, prepend = false) {
@@ -315,7 +313,6 @@ class ChatView {
             <span class="message-user">${message.username}</span>
             <span class="message-text">${message.text}</span>
         </div>`);
-        // this.chatElem.appendChild(messageElem);
         if (prepend) {
             this.chatElem.insertBefore(messageElem, this.chatElem.firstChild);
         } else {
@@ -449,11 +446,17 @@ function main() {
 
     setInterval(refreshLobby, 60000);
 
+    function extractRoomIdFromPath(hash) {
+        const match = hash.match(/\/chat\/(room-\d+)/);
+        return match ? match[1] : null;
+    }
+
     Service.getProfile()
         .then(() => {
             console.log('Profile updated:', profile);
         })
         .catch(error => console.error('Error fetching profile:', error));
+    
 
     function renderRoute() {
         console.log("Current path:", window.location.hash.substring(1));
@@ -473,24 +476,33 @@ function main() {
             console.log("Path before extracting room ID:", path);
             const parts = path.split('/');
             console.log("Parts array:", parts);
-            const roomId = parts[2];
+            // not working parts[2] does not work after refreshing the page
+            const roomId = extractRoomIdFromPath(window.location.hash);
             console.log("Rooms in the lobby:", Object.keys(lobby.rooms));
 
-            const room = lobby.getRoom(roomId);
-
-            if (room) {
-                chatView.setRoom(room);
-                pageView.appendChild(chatView.elem);
-            } else {
-                console.error("Room not found");
+            if (roomId) {
+                Service.getAllRooms().then(rooms => {
+                    lobby.rooms = {};
+                    rooms.forEach(roomData => {
+                        lobby.addRoom(roomData.id, roomData.name, roomData.image, roomData.messages);
+                    });
+                    lobbyView.redrawList();
+                    
+                    const room = lobby.getRoom(roomId);
+                    if (room) {
+                        chatView.setRoom(room);
+                        pageView.appendChild(chatView.elem);
+                    } else {
+                        console.error("Room not found");
+                    }
+                }).catch(error => {
+                    console.error("Error fetching rooms:", error);
+                });
             }
         } else if (path === "/profile") {
             pageView.appendChild(profileView.elem);
         }
     }
-
-    
-
 
     window.addEventListener('popstate', renderRoute);
 
@@ -505,8 +517,6 @@ function main() {
 
     cpen322.setDefault("testRoomId", "room-1");
     cpen322.setDefault("cookieName", "cpen322-session");
-    // cpen322.setDefault("testUser1", "{ username: 'alice', password: 'secret', saltedHash: '1htYvJoddV8mLxq3h7C26/RH2NPMeTDxHIxWn49M/G0wxqh/7Y3cM+kB1Wdjr4I=' }");
-    // cpen322.setDefault("testUser2", "{ username: 'bob', password: 'password', saltedHash: 'MIYB5u3dFYipaBtCYd9fyhhanQkuW4RkoRTUDLYtwd/IjQvYBgMHL+eoZi3Rzhw=' }");
     cpen322.setDefault("image", "assets/everyone-icon.png");
     cpen322.setDefault("webSocketServer", "ws://localhost:8000");
 }

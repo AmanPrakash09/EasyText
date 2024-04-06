@@ -63,7 +63,6 @@ db.getRooms()
     broker.on('connection', function connection(ws, req) {
         console.log('Client connected');
     
-        // Parse cookies from request
         const cookieHeader = req.headers.cookie;
         if (!cookieHeader) {
             console.log('No cookie header, closing WebSocket connection.');
@@ -86,14 +85,17 @@ db.getRooms()
     
         ws.username = sessionManager.getUsername(sessionToken);
     
-        ws.on('message', function incoming(message) {
+        ws.on('message', function incoming(messageBuffer) {
             
-            console.log('Received message:', message);
+            console.log('Received message:', messageBuffer);
     
             try {
-                let parsedMessage = JSON.parse(message);
+                let parsedMessage = JSON.parse(messageBuffer.toString());
+                let roomId = parsedMessage.roomId;
                 parsedMessage.text = sanitizeString(parsedMessage.text);
                 parsedMessage.username = ws.username;
+                let username = parsedMessage.username;
+                let text = parsedMessage.text;
     
                 const serializedMessage = JSON.stringify(parsedMessage);
     
@@ -121,12 +123,11 @@ db.getRooms()
                         timestamp: Date.now(),
                         messages: messages[roomId].slice()
                     };
-
-                    // messages.text = sanitizeString(messages.text);
     
                     db.addConversation(conversation)
                     .then(() => {
                         messages[roomId] = [];
+                        console.log('Adding conversation to db');
                     }).catch(err => {
                         console.error('Error saving conversation:', err);
                     });
@@ -174,6 +175,7 @@ app.get('/chat/:room_id/messages', sessionManager.middleware, (req, res) => {
     db.getLastConversation(room_id, before)
     .then(conversation => {
         if (conversation) {
+            console.log('Server is sending the last conversation!');
             res.json(conversation);
         } else {
             res.status(404).json({ error: `No conversation found for room ${room_id}` });
