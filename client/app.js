@@ -254,9 +254,108 @@ class ChatView {
             if (event.deltaY < 0 && this.chatElem.scrollTop === 0 && this.room.canLoadConversation) {
                 this.room.getLastConversation.next();
             }
-        });        
-    }
+        });
+        
+        // create a container for the popup
+        this.formPopupContainer = document.createElement('div');
+        this.formPopupContainer.style.display = 'none';
+        this.formPopupContainer.style.position = 'fixed';
+        this.formPopupContainer.style.left = '50%';
+        this.formPopupContainer.style.top = '50%';
+        this.formPopupContainer.style.transform = 'translate(-50%, -50%)';
+        this.formPopupContainer.style.border = '1px solid #ccc';
+        this.formPopupContainer.style.backgroundColor = '#fff';
+        this.formPopupContainer.style.padding = '20px';
+        this.formPopupContainer.style.zIndex = '1000';
+        document.body.appendChild(this.formPopupContainer);
+        
+        // adding button here so that user can select any other user in the chatroom
+        this.generateResponseButton = createDOM('<button class="show-users-btn">Generate Response</button>');
+        this.elem.appendChild(this.generateResponseButton);
 
+        this.generateResponseButton.addEventListener('click', () => this.showGenerateResponseForm());
+    }
+    
+    // this method will show the pop-up form to get data for the generated response
+    showGenerateResponseForm() {
+        this.formPopupContainer.innerHTML = '';
+    
+        // form title
+        const formTitle = document.createElement('h3');
+        formTitle.textContent = 'Please select a user:';
+        this.formPopupContainer.appendChild(formTitle);
+    
+        const usersList = document.createElement('form');
+        usersList.setAttribute('id', 'usersListForm');
+        this.formPopupContainer.appendChild(usersList);
+    
+        // will fetch and show users
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', `${Service.origin}/users`);
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                const users = JSON.parse(xhr.responseText);
+                users.forEach(user => {
+                    const userLabel = document.createElement('label');
+                    userLabel.textContent = user.username;
+                    userLabel.classList.add('user-label');
+    
+                    const userRadioButton = document.createElement('input');
+                    userRadioButton.setAttribute('type', 'radio');
+                    userRadioButton.setAttribute('name', 'userSelection');
+                    userRadioButton.value = user.username;
+                    userRadioButton.classList.add('user-radio');
+    
+                    usersList.appendChild(userRadioButton);
+                    usersList.appendChild(userLabel);
+                    usersList.appendChild(document.createElement('br'));
+                });
+            } else {
+                console.error('Failed to fetch users:', xhr.responseText);
+            }
+        };
+        xhr.onerror = () => console.error('Error fetching users');
+        xhr.send();
+    
+        // container for the number of messages input
+        const messagesInputContainer = document.createElement('div');
+        messagesInputContainer.classList.add('input-container');
+        this.formPopupContainer.appendChild(messagesInputContainer);
+    
+        const messagesQuestion = document.createElement('h3');
+        messagesQuestion.textContent = 'How many messages would you like to take into consideration for the response?';
+        messagesInputContainer.appendChild(messagesQuestion);
+    
+        const messagesInput = document.createElement('input');
+        messagesInput.setAttribute('type', 'number');
+        messagesInput.setAttribute('min', '1');
+        messagesInput.setAttribute('id', 'numMessages');
+        messagesInput.required = true;
+        messagesInputContainer.appendChild(messagesInput);
+    
+        // container for the button
+        const buttonContainer = document.createElement('div');
+        buttonContainer.classList.add('button-container');
+        this.formPopupContainer.appendChild(buttonContainer);
+    
+        const doneButton = document.createElement('button');
+        doneButton.textContent = 'Done';
+        doneButton.type = 'button';
+        doneButton.classList.add('done-btn');
+        doneButton.addEventListener('click', () => {
+            const selectedUser = document.querySelector('input[name="userSelection"]:checked');
+            const numMessages = document.getElementById('numMessages').value;
+    
+            console.log('Selected user:', selectedUser ? selectedUser.value : 'None');
+            console.log('Number of messages:', numMessages);
+    
+            this.formPopupContainer.style.display = 'none';
+        });
+        buttonContainer.appendChild(doneButton);
+    
+        this.formPopupContainer.style.display = 'block';
+    }
+    
     sendMessage() {
         const newMessage = this.inputElem.value.trim();
 

@@ -9,7 +9,7 @@ async function main() {
     }
   });
 
-  const text = 'I am feeling great today, the weather is so nice';
+  const text = 'I am feeling good today, the weather is so nice and I have a lot of homework';
 
   const document = {
     content: text,
@@ -17,13 +17,18 @@ async function main() {
   };
 
   try {
-    const [result] = await client.analyzeSentiment({ document });
-    const sentiment = result.documentSentiment;
+    const [result] = await client.analyzeEntitySentiment({ document });
+    const entities = result.entities;
 
-    console.log(`Sentiment score: ${sentiment.score}`);
-    console.log(`Sentiment magnitude: ${sentiment.magnitude}`);
+    console.log('Entities and sentiment:');
+    entities.forEach(entity => {
+      console.log(`  Name: ${entity.name}`);
+      console.log(`  Type: ${entity.type}`);
+      console.log(`  Score: ${entity.sentiment.score}`);
+      console.log(`  Magnitude: ${entity.sentiment.magnitude}`);
+    });
   } catch (err) {
-    console.error('Error analyzing sentiment:', err);
+    console.error('Error analyzing entity sentiment:', err);
   }
 }
 

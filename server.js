@@ -266,6 +266,17 @@ app.get('/chat', sessionManager.middleware, async (req, res) => {
     }
 });
 
+// endpoint to get all users
+app.get('/users', sessionManager.middleware, async (req, res) => {
+    try {
+        const users = await db.getUsers();
+        res.json(users.map(user => ({ username: user.username })));
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
 '/app.js', sessionManager.middleware, express.static(path.join(clientApp, 'app.js'));
 
 '/index.html', sessionManager.middleware, express.static(path.join(clientApp, 'index.html'));

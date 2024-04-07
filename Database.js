@@ -154,4 +154,11 @@ Database.prototype.getUser = function(username) {
     });
 };
 
+// getting all users of the app
+Database.prototype.getUsers = function() {
+    return this.connected.then(db => 
+        db.collection('users').find({}).project({ password: 0 }).toArray()
+    );
+};
+
 module.exports = Database;

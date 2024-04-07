@@ -232,6 +232,19 @@ button:hover {
     background-color: #2980b9;
 }
 
+/* --------------------------------User Pop Out-------------------------------- */
+.input-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+.button-container {
+    display: flex;
+    justify-content: flex-end;
+}
+.done-btn {
+    margin-top: 10px;
+}
 /* --------------------------------Resizing-------------------------------- */
 @media (min-width: 1024px) {
     #app-view {
