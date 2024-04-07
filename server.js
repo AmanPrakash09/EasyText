@@ -277,6 +277,21 @@ app.get('/users', sessionManager.middleware, async (req, res) => {
     }
 });
 
+// endpoint to get last messages in chatroom 
+app.get('/chat/:room_id/latestmessages', sessionManager.middleware, (req, res) => {
+    const room_id = req.params.room_id;
+    const limit = parseInt(req.query.limit) || 10;
+
+    db.getLatestMessages(room_id, limit)
+        .then(messages => {
+            res.json(messages);
+        })
+        .catch(err => {
+            console.error('Error getting latest messages:', err);
+            res.status(500).json({ error: 'Internal Server Error' });
+        });
+});
+
 '/app.js', sessionManager.middleware, express.static(path.join(clientApp, 'app.js'));
 
 '/index.html', sessionManager.middleware, express.static(path.join(clientApp, 'index.html'));

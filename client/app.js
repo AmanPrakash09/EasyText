@@ -129,7 +129,28 @@ let Service = {
                 })
                 .catch(error => reject(error));
         });
-    }
+    },
+
+    // getting the last n number of messages in chatroom
+    getLastNMessages: function(roomId, limit = 10) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', `${this.origin}/chat/${roomId}/latestmessages?limit=${limit}`);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error(xhr.responseText));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                reject(new Error('Request failed'));
+            };
+            xhr.send();
+        });
+    },
 
 };
 
@@ -346,8 +367,25 @@ class ChatView {
             const selectedUser = document.querySelector('input[name="userSelection"]:checked');
             const numMessages = document.getElementById('numMessages').value;
     
-            console.log('Selected user:', selectedUser ? selectedUser.value : 'None');
+            if (!selectedUser) {
+                alert('Please select a user.');
+                return;
+            }
+    
+            if (!numMessages) {
+                alert('Please enter a number of messages.');
+                return;
+            }
+            
+            if (numMessages < 1) {
+                alert('Please enter a number greater than 0.');
+                numMessagesInput.focus();
+                return;
+            }
+    
+            console.log('Selected user:', selectedUser);
             console.log('Number of messages:', numMessages);
+            const latestMessages = this.fetchPastMessages(numMessages);
     
             this.formPopupContainer.style.display = 'none';
         });
@@ -356,6 +394,41 @@ class ChatView {
         this.formPopupContainer.style.display = 'block';
     }
     
+    // returns a certain number of previous messages
+    fetchPastMessages(numberOfMessages) {
+        if (!this.room) {
+            console.error("No room set for the ChatView instance.");
+            return;
+        }
+        
+        console.log('Number of messages in room:', this.room.messages.length);
+    
+        let lastMessageTimestamp;
+        if (this.room.messages.length > 0) {
+            const lastMessage = this.room.messages[this.room.messages.length - 1];
+            lastMessageTimestamp = lastMessage.timestamp;
+    
+            console.log('Timestamp of the last message:', lastMessageTimestamp);
+    
+            if (!lastMessageTimestamp) {
+                console.log('Last message has no timestamp. Using current time.');
+                lastMessageTimestamp = Date.now();
+            }
+        } else {
+            console.log('No messages in room. Using current time.');
+            lastMessageTimestamp = Date.now();
+        }
+    
+        Service.getLastNMessages(this.room.id, numberOfMessages)
+            .then(messages => {
+                console.log('Latest messages fetched:', messages);
+                return messages;
+            })
+            .catch(error => {
+                console.error('Error fetching latest messages:', error);
+            });
+    }
+        
     sendMessage() {
         const newMessage = this.inputElem.value.trim();
 

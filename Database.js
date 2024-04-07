@@ -161,4 +161,36 @@ Database.prototype.getUsers = function() {
     );
 };
 
+Database.prototype.getLatestMessages = function(room_id, limit) {
+    return this.connected.then(db =>
+        new Promise((resolve, reject) => {
+            // sort all timestamp by descending value
+            db.collection('conversations')
+                .find({ room_id: room_id.toString() })
+                .sort({ timestamp: -1 })
+                .toArray()
+                .then(conversations => {
+                    let messages = [];
+                    // iterate over the conversations
+                    for (let conversation of conversations) {
+                        // add messages until enough
+                        messages = messages.concat(conversation.messages.slice(-limit));
+                        if (messages.length >= limit) {
+                            break;
+                        }
+                    }
+                    // throw some away if over limit
+                    if (messages.length > limit) {
+                        messages = messages.slice(0, limit);
+                    }
+                    
+                    resolve(messages.reverse());
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        })
+    );
+};
+
 module.exports = Database;
