@@ -28,6 +28,8 @@ function logRequest(req, res, next){
 const host = 'localhost';
 const port = 3000;
 const clientApp = path.join(__dirname, 'client');
+const distPath = path.join(clientApp, 'dist');
+const modelsPath = path.join(__dirname, 'models');
 
 const broker = new WebSocket.Server({ port: 8000 });
 
@@ -39,6 +41,9 @@ let app = express();
 app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debug
+app.use('/models', express.static(modelsPath));
+// Serve static files from 'dist' directory under 'clientApp'
+app.use('/dist', express.static(distPath));
 
 let messages = {};
 

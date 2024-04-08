@@ -249,6 +249,10 @@ class ChatView {
                     <textarea class="page-control-input" placeholder="Type your message here..."></textarea>
                     <button class="page-control-btn">Send</button>
                 </div>
+                <div>
+                    <video class="video" width="720" height="560" autoplay muted></video>
+                    <button class="startFacialRecognition">Analyze Emotion</button>
+                </div>
             </div>
         `);
 
@@ -295,6 +299,40 @@ class ChatView {
         this.elem.appendChild(this.generateResponseButton);
 
         this.generateResponseButton.addEventListener('click', () => this.showGenerateResponseForm());
+        
+        this.videoElem = this.elem.querySelector('.video');
+        this.videoElem.style.display = 'none';
+        this.startFacialRecognitionButton = this.elem.querySelector('.startFacialRecognition');
+        
+        this.startFacialRecognitionButton.addEventListener('click', () => this.initializeAndStartFacialRecognition());
+    }
+
+    initializeAndStartFacialRecognition() {
+        const faceapi = require('../face-api.min.js')
+        Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri('../models'),
+            faceapi.nets.faceLandmark68Net.loadFromUri('../models'),
+            faceapi.nets.faceRecognitionNet.loadFromUri('../models'),
+            faceapi.nets.faceExpressionNet.loadFromUri('../models')
+        ]).then(() => this.startFacialRecognition())
+        .catch(error => {
+            console.error("Model loading failed:", error);
+        });
+    }
+    
+    startFacialRecognition() {
+        const video = this.videoElem;
+        
+        video.style.display = 'block';
+        video.addEventListener('play', () => {
+            console.log("yo this shi nice")
+        })
+        navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            video.srcObject = stream;
+            this.videoElem.play();
+        })
+        .catch(err => console.error(err));
     }
     
     // this method will show the pop-up form to get data for the generated response
@@ -680,17 +718,17 @@ function main() {
 
     renderRoute();
     
-    cpen322.export(arguments.callee, {
-        refreshLobby: refreshLobby,
-        lobby: lobby,
-        socket: socket,
-        chatView: chatView
-    });
+    // cpen322.export(arguments.callee, {
+    //     refreshLobby: refreshLobby,
+    //     lobby: lobby,
+    //     socket: socket,
+    //     chatView: chatView
+    // });
 
-    cpen322.setDefault("testRoomId", "room-1");
-    cpen322.setDefault("cookieName", "cpen322-session");
-    cpen322.setDefault("image", "assets/everyone-icon.png");
-    cpen322.setDefault("webSocketServer", "ws://localhost:8000");
+    // cpen322.setDefault("testRoomId", "room-1");
+    // cpen322.setDefault("cookieName", "cpen322-session");
+    // cpen322.setDefault("image", "assets/everyone-icon.png");
+    // cpen322.setDefault("webSocketServer", "ws://localhost:8000");
 }
 
 window.addEventListener('load', main);
