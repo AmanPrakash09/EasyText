@@ -7,6 +7,7 @@ const Database = require('./Database.js');
 const SessionManager = require('./SessionManager.js');
 const sessionManager = new SessionManager();
 const crypto = require('crypto');
+const generateChatResponse = require('./resGenOpenAI.js');
 
 const mongoUrl = 'mongodb://127.0.0.1:27017';
 const dbName = 'cpen322-messenger';
@@ -277,14 +278,42 @@ app.get('/users', sessionManager.middleware, async (req, res) => {
     }
 });
 
-// endpoint to get last messages in chatroom 
-app.get('/chat/:room_id/latestmessages', sessionManager.middleware, (req, res) => {
+// endpoint to get generated response
+app.get('/chat/:room_id/generatedresponse', sessionManager.middleware, (req, res) => {
     const room_id = req.params.room_id;
     const limit = parseInt(req.query.limit) || 10;
+    const username = req.query.username;
+    console.log("Trying to get generated response");
 
     db.getLatestMessages(room_id, limit)
-        .then(messages => {
-            res.json(messages);
+        .then(async (messages) => {
+            console.log("Latest messages: ", messages);
+            // do ChatGPT stuff
+            const formattedMessages = [
+                { role: "system", content: "You are going to come up with a helpful response." }
+            ];
+            
+            /* need to format messages for ChatGPT. For example
+             * messages: [{ role: "system", content: "You are going to come up with a helpful response." },
+                         { role: "user", content: "alice:I want to get better at coding"},
+                         { role: "user", content: "bob:I can help you"},,
+                         { role: "user", content: "alice:sure, what do you recommend?"},,
+                         { role: "user", content: "Come up with a response to alice"},] // the selected user was alice
+             */
+            messages.forEach(msg => {
+                formattedMessages.push({ role: "user", content: `${msg.username}:${msg.text}` });
+            });
+
+            formattedMessages.push({ role: "user", content: `Come up with a response to ${username}` });
+            console.log("Formatted messages for ChatGPT: ", formattedMessages);
+
+            try {
+                const response = await generateChatResponse(formattedMessages);
+                res.json({ response });
+            } catch (error) {
+                console.error('Error generating chat response:', error);
+                res.status(500).json({ error: 'Error generating response' });
+            }
         })
         .catch(err => {
             console.error('Error getting latest messages:', err);

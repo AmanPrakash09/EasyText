@@ -131,11 +131,11 @@ let Service = {
         });
     },
 
-    // getting the last n number of messages in chatroom
-    getLastNMessages: function(roomId, limit = 10) {
+    // getting the generated response
+    getGeneratedResponse1: function(roomId, limit = 10, username) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', `${this.origin}/chat/${roomId}/latestmessages?limit=${limit}`);
+            xhr.open('GET', `${this.origin}/chat/${roomId}/generatedresponse?limit=${limit}&username=${username}`);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
@@ -385,7 +385,7 @@ class ChatView {
     
             console.log('Selected user:', selectedUser);
             console.log('Number of messages:', numMessages);
-            const latestMessages = this.fetchPastMessages(numMessages);
+            this.getGeneratedResponse(selectedUser.value, numMessages);
     
             this.formPopupContainer.style.display = 'none';
         });
@@ -394,8 +394,8 @@ class ChatView {
         this.formPopupContainer.style.display = 'block';
     }
     
-    // returns a certain number of previous messages
-    fetchPastMessages(numberOfMessages) {
+    // puts the generated response in the message box
+    getGeneratedResponse(selectedUser,numberOfMessages) {
         if (!this.room) {
             console.error("No room set for the ChatView instance.");
             return;
@@ -419,13 +419,13 @@ class ChatView {
             lastMessageTimestamp = Date.now();
         }
     
-        Service.getLastNMessages(this.room.id, numberOfMessages)
-            .then(messages => {
-                console.log('Latest messages fetched:', messages);
-                return messages;
+        Service.getGeneratedResponse1(this.room.id, numberOfMessages, selectedUser)
+            .then(message => {
+                console.log('Generated Response:', message);
+                this.inputElem.value = message.response;
             })
             .catch(error => {
-                console.error('Error fetching latest messages:', error);
+                console.error('Error getting generated response:', error);
             });
     }
         
