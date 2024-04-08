@@ -308,7 +308,7 @@ class ChatView {
     }
 
     initializeAndStartFacialRecognition() {
-        const faceapi = require('../face-api.min.js')
+        // const faceapi = require('../face-api.min.js')
         Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('../models'),
             faceapi.nets.faceLandmark68Net.loadFromUri('../models'),
@@ -325,7 +325,10 @@ class ChatView {
         
         video.style.display = 'block';
         video.addEventListener('play', () => {
-            console.log("yo this shi nice")
+            setInterval(async () => {
+              const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
+              console.log(detections)
+            })
         })
         navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
