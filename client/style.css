@@ -245,6 +245,21 @@ button:hover {
 .done-btn {
     margin-top: 10px;
 }
+
+/* --------------------------------Video-------------------------------- */
+.video-container {
+    position: relative;
+    width: 720px; /* Adjust as needed */
+    height: 560px; /* Adjust as needed */
+}
+
+.video-container video,
+.video-container canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 /* --------------------------------Resizing-------------------------------- */
 @media (min-width: 1024px) {
     #app-view {

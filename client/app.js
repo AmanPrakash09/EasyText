@@ -250,6 +250,9 @@ class ChatView {
                     <button class="page-control-btn">Send</button>
                 </div>
                 <div>
+                    <button class="show-gen-form">Generate Response</button>
+                </div>
+                <div class="video-container">
                     <video class="video" width="720" height="560" autoplay muted></video>
                     <button class="startFacialRecognition">Analyze Emotion</button>
                 </div>
@@ -295,8 +298,7 @@ class ChatView {
         document.body.appendChild(this.formPopupContainer);
         
         // adding button here so that user can select any other user in the chatroom
-        this.generateResponseButton = createDOM('<button class="show-users-btn">Generate Response</button>');
-        this.elem.appendChild(this.generateResponseButton);
+        this.generateResponseButton = this.elem.querySelector('.show-gen-form');
 
         this.generateResponseButton.addEventListener('click', () => this.showGenerateResponseForm());
         
@@ -308,7 +310,6 @@ class ChatView {
     }
 
     initializeAndStartFacialRecognition() {
-        // const faceapi = require('../face-api.min.js')
         Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('../models'),
             faceapi.nets.faceLandmark68Net.loadFromUri('../models'),
@@ -322,21 +323,44 @@ class ChatView {
     
     startFacialRecognition() {
         const video = this.videoElem;
-        
         video.style.display = 'block';
-        video.addEventListener('play', () => {
-            setInterval(async () => {
-              const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceExpressions()
-              console.log(detections)
-            })
-        })
+    
+        video.onloadeddata = () => {
+            console.log('Video data has loaded.');
+            this.initializeCanvasAndDetections();
+        };
+    
         navigator.mediaDevices.getUserMedia({ video: true })
         .then(stream => {
             video.srcObject = stream;
-            this.videoElem.play();
+            video.play();
         })
         .catch(err => console.error(err));
     }
+    
+    initializeCanvasAndDetections() {
+        if (faceapi) {
+            const video = this.videoElem;
+            const canvas = faceapi.createCanvasFromMedia(video);
+            const canvasContainer = this.elem.querySelector('.video-container');
+            canvasContainer.append(canvas);
+            const displaySize = { width: video.width, height: video.height };
+            faceapi.matchDimensions(canvas, displaySize);
+            setInterval(async () => {
+                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
+                                                 .withFaceLandmarks()
+                                                 .withFaceExpressions();
+                const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                faceapi.draw.drawDetections(canvas, resizedDetections);
+                faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+                faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+            }, 100);
+        } else {
+            console.error('faceapi is not defined');
+        }
+    }
+    
     
     // this method will show the pop-up form to get data for the generated response
     showGenerateResponseForm() {
