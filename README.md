@@ -10,7 +10,20 @@ These enhancements aim to create a more intuitive and human-like interaction wit
 
 <h2>Code Submission</h2>
 <h3>Code for Facial Emotion Recognition</h3>
+- getGeneratedResponse1: app.js - line 135<br>
+- showGenerateResponseForm: app.js - line 441<br>
+- getGeneratedResponse: app.js - line 538<br>
+- endpoint: server.js - line 278<br>
 <h3>Code for Generated Responses</h3>
+- getEmotionalResponse: app.js - line 156<br>
+- initializeAndStartFacialRecognition: app.js - line 336<br>
+- startFacialRecognition: app.js - line 348<br>
+- initializeCanvasAndDetections: app.js - line 365<br>
+- closeVideo: app.js - line 394<br>
+- getEmotionalResponse: app.js - line 416<br>
+- endpoint: server.js - line 332<br><br>
+
+resGenOpenAI.js has the function to call the OpenAI API
 
 
 <h2>Documentation</h2>
