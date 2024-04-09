@@ -297,14 +297,15 @@ class ChatView {
         this.formPopupContainer.style.zIndex = '1000';
         document.body.appendChild(this.formPopupContainer);
         
-        // adding button here so that user can select any other user in the chatroom
+        // adding button here so that user can select any other user in the chatroom along with a number of messages for the generated response
         this.generateResponseButton = this.elem.querySelector('.show-gen-form');
-
         this.generateResponseButton.addEventListener('click', () => this.showGenerateResponseForm());
         
+        // these are elements for the face recognition part
         this.videoElem = this.elem.querySelector('.video');
         this.videoElem.style.display = 'none';
         this.startFacialRecognitionButton = this.elem.querySelector('.startFacialRecognition');
+        this.finalFacialEmotion = null;
         
         this.startFacialRecognitionButton.addEventListener('click', () => this.initializeAndStartFacialRecognition());
     }
@@ -342,11 +343,13 @@ class ChatView {
         if (faceapi) {
             const video = this.videoElem;
             const canvas = faceapi.createCanvasFromMedia(video);
+            canvas.addEventListener('click', () => this.closeVideo());
             const canvasContainer = this.elem.querySelector('.video-container');
             canvasContainer.append(canvas);
+            this.canvas = canvas;
             const displaySize = { width: video.width, height: video.height };
             faceapi.matchDimensions(canvas, displaySize);
-            setInterval(async () => {
+            this.detectionInterval = setInterval(async () => {
                 const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
                                                  .withFaceLandmarks()
                                                  .withFaceExpressions();
@@ -355,12 +358,35 @@ class ChatView {
                 faceapi.draw.drawDetections(canvas, resizedDetections);
                 faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
                 faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-            }, 100);
+                if (detections.length > 0 && detections[0].expressions) {
+                    this.finalFacialEmotion = detections[0].expressions.asSortedArray()[0].expression;
+                }
+                console.log(detections);
+            }, 10);
         } else {
             console.error('faceapi is not defined');
         }
     }
     
+    closeVideo() {
+        if (this.videoElem.srcObject) {
+            const tracks = this.videoElem.srcObject.getTracks();
+            tracks.forEach(track => track.stop());
+            this.videoElem.srcObject = null;
+        }
+        this.videoElem.style.display = 'none';
+    
+        if (this.canvas) {
+            this.canvas.remove();
+            this.canvas = null;
+        }
+    
+        if (this.detectionInterval) {
+            clearInterval(this.detectionInterval);
+            this.detectionInterval = null;
+        }
+        console.log("Final Emotion: ", this.finalFacialEmotion);
+    }
     
     // this method will show the pop-up form to get data for the generated response
     showGenerateResponseForm() {
