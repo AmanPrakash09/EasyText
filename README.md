@@ -15,17 +15,17 @@ These enhancements aim to create a more intuitive and human-like interaction wit
 
 <h2>Documentation</h2>
 <h3>User Manual</h3>
-**Enabling Facial Emotion Recognition**
+<strong>Enabling Facial Emotion Recognition</strong><br>
 - Navigate to a chat room<br>
 - Click on the "Analyze Emotion" button<br>
 - Allow the app to access your webcam<br>
 - A video will appear below. Please ensure your face is visible to the webcam<br>
 - After a couple of seconds, your face will be tracked and your emotions will be detected<br>
 - Click on the video and a response will be generated for you<br><br>
-**Enabling Generated Responses**
+<strong>Enabling Generated Responses</strong><br>
 
 <h3>Design and Implementation</h3>
-**AI Model Choice**<br>
+<strong>AI Model Choice</strong><br>
 The integration utilizes the face-api.js library for facial emotion recognition and OpenAI for generating responses.
 
 <h2>Setup and Running Guide</h2>
