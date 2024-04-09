@@ -132,10 +132,10 @@ let Service = {
     },
 
     // getting the generated response
-    getGeneratedResponse1: function(roomId, limit = 10, username) {
+    getGeneratedResponse1: function(roomId, limit = 10, username, user) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', `${this.origin}/chat/${roomId}/generatedresponse?limit=${limit}&username=${username}`);
+            xhr.open('GET', `${this.origin}/chat/${roomId}/generatedresponse?limit=${limit}&username=${username}&user=${user}`);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4) {
                     if (xhr.status === 200) {
@@ -147,6 +147,29 @@ let Service = {
             };
             xhr.onerror = function() {
                 reject(new Error('Request failed'));
+            };
+            xhr.send();
+        });
+    },
+    
+    // getting a response based on the user's emotional state
+    getEmotionalResponse: function(roomId, emotion, username) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const url = `${this.origin}/chat/${roomId}/emotionalresponse?emotion=${emotion}&username=${username}`;
+            xhr.open('GET', url);
+
+            xhr.onload = function() {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        resolve(JSON.parse(xhr.responseText));
+                    } else {
+                        reject(new Error(xhr.responseText));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                reject(new Error('Network request for emotional response failed'));
             };
             xhr.send();
         });
@@ -386,6 +409,32 @@ class ChatView {
             this.detectionInterval = null;
         }
         console.log("Final Emotion: ", this.finalFacialEmotion);
+        this.getEmotionalResponse();
+    }
+    
+    // this method will get a generated response based on the user's emotion
+    getEmotionalResponse() {
+        if (!this.finalFacialEmotion || !this.room) {
+            console.error("Emotion or room not set for the ChatView instance.");
+            return;
+        }
+        
+        Service.getProfile()
+            .then(() => {
+                console.log('Profile:', profile);
+            })
+            .catch(error => console.error('Error fetching profile:', error));
+        
+        const roomId = this.room.id;
+        const emotion = this.finalFacialEmotion;
+        Service.getEmotionalResponse(roomId, emotion, profile.username)
+            .then(response => {
+                console.log('Emotional Response:', response);
+                this.inputElem.value = response.response;
+            })
+            .catch(error => {
+                console.error('Error getting emotional response:', error);
+            });
     }
     
     // this method will show the pop-up form to get data for the generated response
@@ -492,6 +541,12 @@ class ChatView {
             return;
         }
         
+        Service.getProfile()
+            .then(() => {
+                console.log('Profile:', profile);
+            })
+            .catch(error => console.error('Error fetching profile:', error));
+        
         console.log('Number of messages in room:', this.room.messages.length);
     
         let lastMessageTimestamp;
@@ -510,7 +565,7 @@ class ChatView {
             lastMessageTimestamp = Date.now();
         }
     
-        Service.getGeneratedResponse1(this.room.id, numberOfMessages, selectedUser)
+        Service.getGeneratedResponse1(this.room.id, numberOfMessages, selectedUser, profile.username)
             .then(message => {
                 console.log('Generated Response:', message);
                 this.inputElem.value = message.response;

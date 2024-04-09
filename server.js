@@ -290,6 +290,7 @@ app.get('/chat/:room_id/generatedresponse', sessionManager.middleware, (req, res
     const room_id = req.params.room_id;
     const limit = parseInt(req.query.limit) || 10;
     const username = req.query.username;
+    const user = req.query.user;
     console.log("Trying to get generated response");
 
     db.getLatestMessages(room_id, limit)
@@ -297,7 +298,7 @@ app.get('/chat/:room_id/generatedresponse', sessionManager.middleware, (req, res
             console.log("Latest messages: ", messages);
             // do ChatGPT stuff
             const formattedMessages = [
-                { role: "system", content: "You are going to come up with a helpful response." }
+                { role: "system", content: `You are going to come up with a helpful response based on the context of the conversation below while pretending to be ${user}.` }
             ];
             
             /* need to format messages for ChatGPT. For example
@@ -311,7 +312,50 @@ app.get('/chat/:room_id/generatedresponse', sessionManager.middleware, (req, res
                 formattedMessages.push({ role: "user", content: `${msg.username}:${msg.text}` });
             });
 
-            formattedMessages.push({ role: "user", content: `Come up with a response to ${username}` });
+            formattedMessages.push({ role: "user", content: `Come up with a response to ${username} as if you were writing a text message (no need to write "user: ")` });
+            console.log("Formatted messages for ChatGPT: ", formattedMessages);
+
+            try {
+                const response = await generateChatResponse(formattedMessages);
+                res.json({ response });
+            } catch (error) {
+                console.error('Error generating chat response:', error);
+                res.status(500).json({ error: 'Error generating response' });
+            }
+        })
+        .catch(err => {
+            console.error('Error getting latest messages:', err);
+            res.status(500).json({ error: 'Internal Server Error' });
+        });
+});
+
+app.get('/chat/:room_id/emotionalresponse', sessionManager.middleware, (req, res) => {
+    const room_id = req.params.room_id;
+    const emotion = req.query.emotion;
+    const limit = 10;
+    const username = req.query.username;
+    console.log(`Trying to get emotional response: ${emotion}`);
+
+    db.getLatestMessages(room_id, limit)
+        .then(async (messages) => {
+            // do ChatGPT stuff
+            const formattedMessages = [
+                { role: "system", content: "You are an emotional chameleon that can pretend to be someone else." },
+            ];
+
+            /* need to format messages for ChatGPT. For example
+             * messages: [{ role: "system", content: "You are going to come up with a helpful response." },
+                         { role: "user", content: "alice:I want to get better at coding"},
+                         { role: "user", content: "bob:I can help you"},,
+                         { role: "user", content: "alice:sure, what do you recommend?"},,
+                         { role: "user", content: "Come up with a response to alice"},] // the selected user was alice
+             */
+            messages.forEach(msg => {
+                formattedMessages.push({ role: "user", content: `${msg.username}:${msg.text}` });
+            });
+
+            formattedMessages.push({ role: "system", content: `${username} is feeling ${emotion}.` });
+            formattedMessages.push({ role: "user", content: `Pretend you are ${username} and come up with an appropriate response that matches the emotion.` });
             console.log("Formatted messages for ChatGPT: ", formattedMessages);
 
             try {
