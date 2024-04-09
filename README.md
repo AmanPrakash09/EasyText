@@ -23,9 +23,9 @@ This list can be found inside package.json. Please ensure MongoDB is running on 
 There is one API Key for OpenAI. We have sent this key via the Canvas submission.
 
 <h3>Running the Application</h3>
-- Clone the repository.
-- Install dependencies in the root directory of the project: npm install
-- Create a .env folder in the root directory of the project
-- Set the OpenAI API Key in .env as OPENAI_API_KEY="key" (replace with actual key)
-- Start the server: node server
-- Open the client application in your browser (http://localhost:3000/)
+- Clone the repository<br>
+- Install dependencies in the root directory of the project: npm install<br>
+- Create a .env folder in the root directory of the project<br>
+- Set the OpenAI API Key in .env as OPENAI_API_KEY="key" (replace with actual key)<br>
+- Start the server: node server<br>
+- Open the client application in your browser (http://localhost:3000/)<br>
