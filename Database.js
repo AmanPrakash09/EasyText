@@ -3,7 +3,7 @@ const { MongoClient, ObjectId } = require('mongodb');	// require the mongodb dri
 /**
  * Uses mongodb v6.3 - [API Documentation](http://mongodb.github.io/node-mongodb-native/6.3/)
  * Database wraps a mongoDB connection to provide a higher-level abstraction layer
- * for manipulating the objects in our cpen322 app.
+ * for manipulating the objects in our app.
  */
 function Database(mongoUrl, dbName){
 	if (!(this instanceof Database)) return new Database(mongoUrl, dbName);

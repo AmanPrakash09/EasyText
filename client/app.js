@@ -901,18 +901,6 @@ function main() {
     window.addEventListener('popstate', renderRoute);
 
     renderRoute();
-    
-    // cpen322.export(arguments.callee, {
-    //     refreshLobby: refreshLobby,
-    //     lobby: lobby,
-    //     socket: socket,
-    //     chatView: chatView
-    // });
-
-    // cpen322.setDefault("testRoomId", "room-1");
-    // cpen322.setDefault("cookieName", "cpen322-session");
-    // cpen322.setDefault("image", "assets/everyone-icon.png");
-    // cpen322.setDefault("webSocketServer", "ws://localhost:8000");
 }
 
 window.addEventListener('load', main);

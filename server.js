@@ -2,7 +2,6 @@ const path = require('path');
 const fs = require('fs');
 const express = require('express');
 const WebSocket = require('ws');
-const cpen322 = require('./cpen322-tester.js');
 const Database = require('./Database.js');
 const SessionManager = require('./SessionManager.js');
 const sessionManager = new SessionManager();
@@ -11,7 +10,7 @@ const {generateChatResponse, transcribeAudio} = require('./OpenAI-API-Calls.js')
 const fileUpload = require('express-fileupload');
 
 const mongoUrl = 'mongodb://127.0.0.1:27017';
-const dbName = 'cpen322-messenger';
+const dbName = 'easytext-messenger';
 
 const db = new Database(mongoUrl, dbName);
 
@@ -115,7 +114,7 @@ db.getRooms()
             return acc;
         }, {});
     
-        const sessionToken = cookies['cpen322-session'];
+        const sessionToken = cookies['session'];
         if (!sessionManager.isValidSession(sessionToken)) {
             console.log('Invalid session, closing WebSocket connection.');
             ws.close();
@@ -444,6 +443,3 @@ function isCorrectPassword(password, saltedHash) {
 app.listen(port, () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
-
-cpen322.connect('http://3.98.223.41/cpen322/test-a5-server.js');
-cpen322.export(__filename, { app, db, messages, messageBlockSize, sessionManager, isCorrectPassword , broker });

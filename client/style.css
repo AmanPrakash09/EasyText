@@ -247,17 +247,11 @@ button:hover {
 }
 
 /* --------------------------------Video-------------------------------- */
-.video-container {
-    position: relative;
-    width: 720px; /* Adjust as needed */
-    height: 560px; /* Adjust as needed */
-}
-
 .video-container video,
 .video-container canvas {
     position: absolute;
-    top: 0;
-    left: 0;
+    top: 20%;
+    left: 30%;
 }
 
 /* --------------------------------Resizing-------------------------------- */

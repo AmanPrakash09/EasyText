@@ -1,28 +1,13 @@
 conn = new Mongo();
-db = conn.getDB("cpen322-messenger");
+db = conn.getDB("easytext-messenger");
 db.dropDatabase();
 imgHost = '/';
 
 result = db.chatrooms.insert([
 	{
 		_id: 'room-1',
-		name: 'Everyone in CPEN322',
+		name: 'Everyone in EasyText',
 	    image: imgHost+'assets/everyone-icon.png'
-	},
-	{
-		_id: 'room-2',
-		name: 'Foodies only',
-	    image: imgHost+'assets/bibimbap.jpg'
-	},
-	{
-		_id: 'room-3',
-		name: 'Gamers unite',
-	    image: imgHost+'assets/minecraft.jpg'
-	},
-	{
-		_id: 'room-4',
-		name: 'Canucks Fans',
-	    image: imgHost+'assets/canucks.png'
 	}
 ]);
 
@@ -33,15 +18,12 @@ result = db.conversations.insert([
 		room_id: 'room-1',
 		timestamp: 1596233125227,
 		messages: [{
-				username: 'Alice',
+				username: 'alice',
 				text: 'Hello!'
 			}, {
-				username: 'Bob',
+				username: 'bob',
 				text: 'Hi!'
-			}, {
-				username: 'Charlie',
-				text: "What's up?"
-		}]
+			}]
 	}
 ]);
 

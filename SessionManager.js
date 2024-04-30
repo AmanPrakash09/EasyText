@@ -25,9 +25,9 @@ function SessionManager (){
             expiresAt: Date.now() + maxAge
         };
 
-		response.cookie('cpen322-session', token, { 'maxAge': maxAge });
+		response.cookie('session', token, { 'maxAge': maxAge });
 
-        console.log(`Set-Cookie header: cpen322-session=${token}; Max-Age=${maxAge};`);
+        console.log(`Set-Cookie header: session=${token}; Max-Age=${maxAge};`);
 		console.log("username: " + sessions[token].username);
 
         setTimeout(() => {
@@ -64,7 +64,7 @@ function SessionManager (){
 			return acc;
 		}, {});
 	
-		const token = cookies['cpen322-session'];
+		const token = cookies['session'];
 		if (!token || !(token in sessions)) {
 			next(new SessionError("Invalid or missing session token."));
 			return;
