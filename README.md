@@ -60,6 +60,6 @@ There is one API Key for OpenAI. We have sent this key via the Canvas submission
 - Install dependencies in the root directory of the project: npm install<br>
 - Create a .env folder in the root directory of the project<br>
 - Set the OpenAI API Key in .env as OPENAI_API_KEY="key" (replace with actual key)<br>
-- Run the command ```npx webpack --config webpack.config.js``` if changes made to app.js
+- Run the command <code>npx webpack --config webpack.config.js</code> if changes made to app.js<br>
 - Start the server: node server<br>
 - Open the client application in your browser (http://localhost:3000/)<br>
