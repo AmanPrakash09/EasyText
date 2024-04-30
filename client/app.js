@@ -132,7 +132,7 @@ let Service = {
     },
 
     // getting the generated response
-    getGeneratedResponse1: function(roomId, limit = 10, username, user) {
+    getGeneratedResponse: function(roomId, limit = 10, username, user) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.open('GET', `${this.origin}/chat/${roomId}/generatedresponse?limit=${limit}&username=${username}&user=${user}`);
@@ -172,6 +172,28 @@ let Service = {
                 reject(new Error('Network request for emotional response failed'));
             };
             xhr.send();
+        });
+    },
+    
+    // "posting" an audio to the server which will make an API call to get text
+    getVoiceToTextTranslation: function (audioBlob) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', `${this.origin}/voice-to-text`);
+            // xhr.setRequestHeader('Content-Type', 'multipart/form-data');
+
+            xhr.onload = () => {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error('Failed to process audio: ' + xhr.responseText));
+                }
+            };
+
+            xhr.onerror = function() {
+                reject(new Error('Network error occurred'));
+            }
+            xhr.send(audioBlob);
         });
     },
 
@@ -279,6 +301,9 @@ class ChatView {
                     <video class="video" width="720" height="560" autoplay muted></video>
                     <button class="startFacialRecognition">Analyze Emotion</button>
                 </div>
+                <div class="voice-container">
+                    <button class="record-voice">Record Voice</button>
+                </div>
             </div>
         `);
 
@@ -331,8 +356,59 @@ class ChatView {
         this.finalFacialEmotion = null;
         
         this.startFacialRecognitionButton.addEventListener('click', () => this.initializeAndStartFacialRecognition());
+        
+        // these are elements for the voice-to-text part
+        this.recordButton = this.elem.querySelector('.record-voice');
+        this.recordButton.addEventListener('click', () => this.toggleRecording());
+
+        // initialize recording state
+        this.isRecording = false;
+        this.mediaRecorder = null;
+        this.audioChunks = [];
     }
 
+    toggleRecording() {
+        if (!this.isRecording) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    this.mediaRecorder = new MediaRecorder(stream);
+                    this.mediaRecorder.start();
+    
+                    this.mediaRecorder.ondataavailable = event => {
+                        this.audioChunks.push(event.data);
+                    };
+    
+                    this.mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(this.audioChunks, { type: 'audio/mp3' });
+                        this.audioChunks = [];
+
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'recording.mp3');
+
+                        for (let pair of formData.entries()) {
+                            console.log(pair[0]+ ', ' + pair[1]);
+                        }
+                        
+    
+                        Service.getVoiceToTextTranslation(formData)
+                            .then(data => {
+                                console.log('Voice to text translation:', data);
+                                this.inputElem.value = data.text;
+                            })
+                            .catch(error => console.error('Error processing voice:', error));
+                    };
+    
+                    this.recordButton.textContent = "Stop Recording";
+                    this.isRecording = true;
+                })
+                .catch(error => console.error('Error accessing microphone:', error));
+        } else {
+            this.mediaRecorder.stop();
+            this.recordButton.textContent = "Record Voice";
+            this.isRecording = false;
+        }
+    }
+    
     initializeAndStartFacialRecognition() {
         Promise.all([
             faceapi.nets.tinyFaceDetector.loadFromUri('../models'),
@@ -565,7 +641,7 @@ class ChatView {
             lastMessageTimestamp = Date.now();
         }
     
-        Service.getGeneratedResponse1(this.room.id, numberOfMessages, selectedUser, profile.username)
+        Service.getGeneratedResponse(this.room.id, numberOfMessages, selectedUser, profile.username)
             .then(message => {
                 console.log('Generated Response:', message);
                 this.inputElem.value = message.response;

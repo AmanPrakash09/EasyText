@@ -1,5 +1,6 @@
 const { config } = require('dotenv');
 const OpenAI = require('openai');
+const fs = require('fs');
 
 config();
 
@@ -19,4 +20,18 @@ async function generateChatResponse(messages) {
         throw error;
     }
 }
-module.exports = generateChatResponse;
+
+async function transcribeAudio(audioPath) {
+    try {
+        const response = await openai.audio.transcriptions.create({
+            model: "whisper-1",
+            file: fs.createReadStream(audioPath),
+        });
+        return response.text;
+    } catch (error) {
+        console.error('Error transcribing audio:', error);
+        throw error;
+    }
+}
+
+module.exports = { generateChatResponse, transcribeAudio };

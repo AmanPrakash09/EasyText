@@ -7,7 +7,8 @@ const Database = require('./Database.js');
 const SessionManager = require('./SessionManager.js');
 const sessionManager = new SessionManager();
 const crypto = require('crypto');
-const generateChatResponse = require('./resGenOpenAI.js');
+const {generateChatResponse, transcribeAudio} = require('./OpenAI-API-Calls.js');
+const fileUpload = require('express-fileupload');
 
 const mongoUrl = 'mongodb://127.0.0.1:27017';
 const dbName = 'cpen322-messenger';
@@ -37,14 +38,18 @@ const broker = new WebSocket.Server({ port: 8000 });
 const messageBlockSize = 10;
 
 // express app
-let app = express();
+const app = express();
 
+// to upload audio files
+app.use(fileUpload({
+    createParentPath: true
+}));
 app.use(express.json()) 						// to parse application/json
 app.use(express.urlencoded({ extended: true })) // to parse application/x-www-form-urlencoded
 app.use(logRequest);							// logging for debugdebug
 app.use('/face-api.min.js', express.static(faceapiPath));
 app.use('/models', express.static(modelsPath));
-// Serve static files from 'dist' directory under 'clientApp'
+// serve static files from 'dist' directory under 'clientApp'
 app.use('/dist', express.static(distPath));
 
 let messages = {};
@@ -329,6 +334,7 @@ app.get('/chat/:room_id/generatedresponse', sessionManager.middleware, (req, res
         });
 });
 
+// endpoint to get emotional response
 app.get('/chat/:room_id/emotionalresponse', sessionManager.middleware, (req, res) => {
     const room_id = req.params.room_id;
     const emotion = req.query.emotion;
@@ -370,6 +376,31 @@ app.get('/chat/:room_id/emotionalresponse', sessionManager.middleware, (req, res
             console.error('Error getting latest messages:', err);
             res.status(500).json({ error: 'Internal Server Error' });
         });
+});
+
+// endpoint to post audio file, make API call to Whisper model, and get translated text
+app.post('/voice-to-text', async (req, res) => {
+    console.log(req.files);
+    if (!req.files || !req.files.audio) {
+        return res.status(400).send('No audio file uploaded.');
+    }
+
+    const audioFile = req.files.audio;
+    const savePath = path.join(__dirname, 'uploads', audioFile.name);
+
+    try {
+        await audioFile.mv(savePath);
+        const text = await transcribeAudio(savePath);
+        res.json({ text });
+    } catch (error) {
+        console.error('Failed to transcribe audio:', error);
+        res.status(500).send('Error processing audio');
+    }
+     finally {
+        fs.unlink(savePath, err => {
+            if (err) console.error('Failed to delete audio file:', err);
+        });
+    }
 });
 
 '/app.js', sessionManager.middleware, express.static(path.join(clientApp, 'app.js'));
