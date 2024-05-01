@@ -1,30 +1,12 @@
-<h1>AI Feature Integration for Chat Application</h1>
-<h2>Approved Proposal - Description and Justification</h2>
-The AI features chosen for our chat application are Facial Emotion Recognition and Generated Responses. Sometimes, things can get lost in translation (textlation) since it is hard to depict another person's emotions or convey your own through text. We wanted to incorporate features that could help users depict emotions better. Originally, we wanted to conduct Sentimental Analysis but realized that from a user's perspective, this would not be very helpful. This is why we chose 2 features: one to capture how the user feels and one to help provide a helpful response to any user in the chat room.
+<h1>EasyText - Chat Application</h1>
+<h2>Description and Justification</h2>
+The AI features chosen for my chat application suport facial recognition, message generation, and voice-to-text transcription. Sometimes, things can get lost in translation (textlation) as it can be hard to depict another person's emotions or convey your own through text. With EasyText, users can hopefully overcome this hurdle. These enhancements aim to create a more intuitive and human-like interaction within conversations, bridging the gap between textual communication and emotional intent.
 <h3>Facial Emotion Recognition - when it is challenging to convey your emotions</h3>
-This feature analyzes the user's facial expressions via their webcam to determine the prevailing emotional state. The application then uses this emotional context to generate a context-aware response by pretending to be the user and reading the chat history.
+This feature analyzes the user's facial expressions via their webcam to determine their prevailing emotional state. The application then uses this data along with the previous messages to make an API call to OpenAI to generate a context-aware response by pretending to be the user.
 <h3>Generated Responses - when it is challenging to know what to say to others</h3>
-This feature allows the user to single out someone in the chat room, selected a certain number of text messages for context, and then a message is written for them.<br>
-<br>
-These enhancements aim to create a more intuitive and human-like interaction within conversations, bridging the gap between textual communication and emotional intent.
-
-<h2>Code Submission</h2>
-<h3>Code for Facial Emotion Recognition</h3>
-- getGeneratedResponse1: app.js - line 135<br>
-- showGenerateResponseForm: app.js - line 441<br>
-- getGeneratedResponse: app.js - line 538<br>
-- endpoint: server.js - line 278<br>
-<h3>Code for Generated Responses</h3>
-- getEmotionalResponse: app.js - line 156<br>
-- initializeAndStartFacialRecognition: app.js - line 336<br>
-- startFacialRecognition: app.js - line 348<br>
-- initializeCanvasAndDetections: app.js - line 365<br>
-- closeVideo: app.js - line 394<br>
-- getEmotionalResponse: app.js - line 416<br>
-- endpoint: server.js - line 332<br><br>
-
-resGenOpenAI.js has the function to call the OpenAI API
-
+This feature allows the user to single out someone in the chat room, selected a certain number of text messages for context, and with an API call to OpenAI, a message is written for their selected target.
+<h3>Voice to Text - when it can be bothersome to type how you feel</h3>
+This feature allows the user to record themselves. This is temporarily turned to an audio file and with an API call to OpenAI's Whisper model, the audio is transcribed to text.
 
 <h2>Documentation</h2>
 <h3>User Manual</h3>
@@ -36,16 +18,28 @@ resGenOpenAI.js has the function to call the OpenAI API
 - After a couple of seconds, your face will be tracked and your emotions will be detected<br>
 - Click on the video and a response will be generated for you<br><br>
 <strong>Enabling Generated Responses</strong><br>
+- Navigate to a chat room<br>
+- Click on the "Generate Response" button<br>
+- Select the user you want to write the message to in the pop-up<br>
+- Select the number of previous messages in the pop-up<br>
+- Click "Done" and a response will be generated for you<br><br>
+<strong>Turning Voice to Text</strong><br>
+- Navigate to a chat room<br>
+- Click on the "Record Voice" button<br>
+- Allow the app to access your microphone<br>
+- Speak into your microphone<br>
+- Click "Stop Recording" when you are finished speaking and a response will be generated for you
 
 <h3>Design and Implementation</h3>
 <strong>AI Model Choice</strong><br>
-The integration utilizes the face-api.js library for facial emotion recognition and OpenAI for generating responses.
+The integration utilizes the face-api.js library for facial emotion recognition along with OpenAI for generating responses and voice-to-text transcription.
 
 <h2>Setup and Running Guide</h2>
 <h3>Dependencies Required</h3>
 Here is a list of dependencies along with their versions:<br>
 "dotenv": "^16.4.5",<br>
 "express": "^4.18.2",<br>
+"express-fileupload": "^1.5.0",
 "face-api.js": "^0.22.2",<br>
 "mongodb": "^6.4.0",<br>
 "openai": "^4.33.0",<br>
@@ -53,13 +47,13 @@ Here is a list of dependencies along with their versions:<br>
 This list can be found inside package.json. Please ensure MongoDB is running on mongodb://127.0.0.1:27017
 
 <h3>API Keys</h3>
-There is one API Key for OpenAI. We have sent this key via the Canvas submission.
+There is one API Key for OpenAI. You will need your own if you want to use the AI features. Please create a <code>.env</code> file in the project's root directory and paste <code>OPENAI_API_KEY="your API key"</code> within it.
 
 <h3>Running the Application</h3>
 - Clone the repository<br>
 - Install dependencies in the root directory of the project: npm install<br>
 - Create a .env folder in the root directory of the project<br>
-- Set the OpenAI API Key in .env as OPENAI_API_KEY="key" (replace with actual key)<br>
+- Set the OpenAI API Key in <code>.env</code> as <code>OPENAI_API_KEY="your API key"</code> (replace with actual key)<br>
 - Run the command <code>npx webpack --config webpack.config.js</code> if changes made to app.js<br>
-- Start the server: node server<br>
+- Start the server by typing <code>node server</code> in your console<br>
 - Open the client application in your browser (http://localhost:3000/)<br>
