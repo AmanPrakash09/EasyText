@@ -9,7 +9,7 @@ const crypto = require('crypto');
 const {generateChatResponse, transcribeAudio} = require('./OpenAI-API-Calls.js');
 const fileUpload = require('express-fileupload');
 
-const mongoUrl = 'mongodb://127.0.0.1:27017';
+const mongoUrl = process.env.MongoDB_Driver_URL;
 const dbName = 'easytext-messenger';
 
 const db = new Database(mongoUrl, dbName);
