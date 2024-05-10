@@ -139,6 +139,7 @@ db.getRooms()
     
                 broker.clients.forEach(function each(client) {
                     if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        console.log('Broadcasting message to client');
                         client.send(serializedMessage);
                     }
                 });
@@ -147,13 +148,6 @@ db.getRooms()
                     messages[roomId] = [];
                 }
                 messages[roomId].push({ username, text });
-    
-                broker.clients.forEach(function each(client) {
-                    if (client !== ws && client.readyState === WebSocket.OPEN) {
-                        console.log('Broadcasting message to client');
-                        client.send(serializedMessage);
-                    }
-                });
     
                 saveConversationIfNecessary(roomId, ws);
     

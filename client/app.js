@@ -669,10 +669,6 @@ class ChatView {
 
     setRoom(room) {
         console.log("Setting room:", room);
-
-        if (this.room && this.room.onNewMessage) {
-            this.room.onNewMessage = null;
-        }
     
         this.room = room;
         this.titleElem.textContent = room.name;
@@ -814,10 +810,10 @@ function main() {
     socket.addEventListener('message', event => {
         const message = JSON.parse(event.data);
         console.log("WebSocket received:", message);
-        // const room = lobby.getRoom(message.roomId);
-        // if (room) {
-        //     room.addMessage(message.username, message.text);
-        // }
+        const room = lobby.getRoom(message.roomId);
+        if (room) {
+            room.addMessage(message.username, message.text);
+        }
     });
 
     const lobby = new Lobby();
