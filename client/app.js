@@ -800,6 +800,8 @@ class Lobby {
     }
 }
 
+let socket;
+
 function main() {
 
     let hostname = new URL(Service.origin).hostname;
@@ -809,7 +811,7 @@ function main() {
         socket.close();
     }
     
-    const socket = new WebSocket(`ws://${hostname}:8000`);
+    socket = new WebSocket(`ws://${hostname}:8000`);
 
     socket.addEventListener('message', event => {
         const message = JSON.parse(event.data);
