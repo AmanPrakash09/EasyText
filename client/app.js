@@ -800,18 +800,12 @@ class Lobby {
     }
 }
 
-let socket;
-
 function main() {
 
     let hostname = new URL(Service.origin).hostname;
     console.log(hostname);
 
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close();
-    }
-    
-    socket = new WebSocket(`ws://${hostname}:8000`);
+    const socket = new WebSocket(`ws://${hostname}:8000`);
 
     socket.addEventListener('message', event => {
         const message = JSON.parse(event.data);
@@ -893,6 +887,7 @@ function main() {
                     
                     const room = lobby.getRoom(roomId);
                     if (room) {
+                        console.log("SETTING ROOM!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         chatView.setRoom(room);
                         pageView.appendChild(chatView.elem);
                     } else {
