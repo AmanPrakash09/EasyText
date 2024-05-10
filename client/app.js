@@ -684,7 +684,7 @@ class ChatView {
 
         this.room.onNewMessage = (message) => {
             console.log("New message received:", message);
-            this.addMessageToChat(message);
+            // this.addMessageToChat(message);
         };
 
         room.onFetchConversation = (conversation) => {
@@ -775,9 +775,9 @@ class Room {
         const message = { username, text };
         this.messages.push(message);
 
-        // if (this.onNewMessage) {
-        //     this.onNewMessage(message);
-        // }
+        if (this.onNewMessage) {
+            this.onNewMessage(message);
+        }
     }
 }
 
