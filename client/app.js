@@ -682,11 +682,6 @@ class ChatView {
             this.addMessageToChat(message);
         });
 
-        this.room.onNewMessage = (message) => {
-            console.log("New message received:", message);
-            this.addMessageToChat(message);
-        };
-
         room.onFetchConversation = (conversation) => {
             const hb = this.chatElem.scrollHeight;
             conversation.messages.slice().reverse().forEach(message => {
