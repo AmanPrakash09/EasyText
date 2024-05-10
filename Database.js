@@ -193,4 +193,10 @@ Database.prototype.getLatestMessages = function(room_id, limit) {
     );
 };
 
+Database.prototype.addUser = function(user) {
+    return this.connected.then(db =>
+        db.collection('users').insertOne(user)
+    );
+};
+
 module.exports = Database;

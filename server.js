@@ -79,7 +79,7 @@ function saveConversationIfNecessary(roomId, ws = null) {
                 console.error('Error saving conversation for room:', roomId, err);
             });
         } else if (ws) {
-            // timeout to save messages if block size is not reached within a 10 seconds
+            // timeout to save messages if block size is not reached within 10 seconds
             clearTimeout(ws.saveConversationTimeout);
             ws.saveConversationTimeout = setTimeout(() => {
                 saveConversationIfNecessary(roomId);
@@ -169,13 +169,15 @@ app.post('/login', async (req, res) => {
         const user = await db.getUser(username);
         
         if (!user) {
-            res.redirect('/login');
+            // res.redirect('/login');
+            res.status(401).send("Invalid username or password.")
         } else {
             if (isCorrectPassword(password, user.password)) {
                 sessionManager.createSession(res, username);
                 res.redirect('/');
             } else {
-                res.redirect('/login');
+                // res.redirect('/login');
+                res.status(401).send("Invalid username or password.")
             }
         }
     } catch (err) {
@@ -184,7 +186,31 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// endpoint to add a user in the database
+app.post('/register', async (req, res) => {
+    console.log("Registering new user !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+    const { newUsername, newPassword } = req.body;
+
+    try {
+        const userExists = await db.getUser(newUsername);
+        if (userExists) {
+            res.status(400).send('User already exists');
+            return;
+        }
+
+        const saltedHash = generateEncryptedPassword(newPassword); // consider switching to bcrypt for password hashing
+        const user = { username: newUsername, password: saltedHash };
+        await db.addUser(user);
+        sessionManager.createSession(res, newUsername);
+        res.redirect('/');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
 app.use('/login', express.static(clientApp + '/login.html', {extensions: ['html', 'css']}));
+app.use('/register', express.static(clientApp + '/login.html', {extensions: ['html', 'css']}));
 app.use('/', sessionManager.middleware, express.static(clientApp, {extensions: ['html', 'css']}));
 
 app.get('/chat/:room_id/messages', sessionManager.middleware, (req, res) => {
@@ -432,6 +458,13 @@ function isCorrectPassword(password, saltedHash) {
     const originalHash = saltedHash.substring(20);
     const hash = crypto.createHash('sha256').update(password + salt).digest('base64');
     return hash === originalHash;
+}
+
+function generateEncryptedPassword(plaintextPassword) {
+    const salt = crypto.randomBytes(20).toString('hex').slice(0, 20);
+    const hash = crypto.createHash('sha256').update(plaintextPassword + salt).digest('base64');
+    const saltedHash = salt + hash;
+    return saltedHash;
 }
 
 app.listen(port, '0.0.0.0', () => {

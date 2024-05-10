@@ -8,7 +8,8 @@
 </head>
 <body>
     <div id="login-container">
-        <form action="/login" method="POST">
+        <h2>Login</h2>
+        <form id="loginForm" action="/login" method="POST">
             <div class="form-group">
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
@@ -22,5 +23,59 @@
             </div>
         </form>
     </div>
+
+    <h2>Register</h2>
+    <form id="registerForm" action="/register" method="POST">
+        <div class="form-group">
+            <label for="newUsername">Username:</label>
+            <input type="text" id="newUsername" name="newUsername" required>
+        </div>
+        <div class="form-group">
+            <label for="newPassword">Password:</label>
+            <input type="password" id="newPassword" name="newPassword" required>
+        </div>
+        <div class="form-group">
+            <button type="submit">Register</button>
+        </div>
+    </form>
+
+    <!-- script for alert when invalid username or password -->
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+        
+            const formData = new FormData(this);
+            fetch('/login', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/'; // redirect to home on successful login
+                } else {
+                    response.text().then(text => alert(text)); // show alert
+                }
+            }).catch(error => console.error('Error:', error));
+        });
+    </script>
+        
+    <!-- script for alert when user already exists -->
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+        
+            const formData = new FormData(this);
+            fetch('/register', {
+                method: 'POST',
+                body: new URLSearchParams(formData)
+            }).then(response => {
+                if (response.ok) {
+                    window.location.href = '/'; // redirect to home on successful registration
+                } else {
+                    response.text().then(text => alert(text)); // show alert
+                }
+            }).catch(error => console.error('Error:', error));
+        });
+    </script>
+        
 </body>
 </html>
