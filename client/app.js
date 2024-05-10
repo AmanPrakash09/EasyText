@@ -682,6 +682,11 @@ class ChatView {
             this.addMessageToChat(message);
         });
 
+        this.room.onNewMessage = (message) => {
+            console.log("New message received:", message);
+            this.addMessageToChat(message);
+        };
+
         room.onFetchConversation = (conversation) => {
             const hb = this.chatElem.scrollHeight;
             conversation.messages.slice().reverse().forEach(message => {
@@ -802,13 +807,13 @@ function main() {
 
     const socket = new WebSocket(`ws://${hostname}:8000`);
 
-    socket.addEventListener('message', event => {
-        const message = JSON.parse(event.data);
-        const room = lobby.getRoom(message.roomId);
-        if (room) {
-            room.addMessage(message.username, message.text);
-        }
-    });
+    // socket.addEventListener('message', event => {
+    //     const message = JSON.parse(event.data);
+    //     const room = lobby.getRoom(message.roomId);
+    //     if (room) {
+    //         room.addMessage(message.username, message.text);
+    //     }
+    // });
 
     const lobby = new Lobby();
 
