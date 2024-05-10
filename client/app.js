@@ -684,7 +684,7 @@ class ChatView {
 
         this.room.onNewMessage = (message) => {
             console.log("New message received:", message);
-            // this.addMessageToChat(message);
+            this.addMessageToChat(message);
         };
 
         room.onFetchConversation = (conversation) => {
@@ -805,6 +805,10 @@ function main() {
     let hostname = new URL(Service.origin).hostname;
     console.log(hostname);
 
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+    }
+    
     const socket = new WebSocket(`ws://${hostname}:8000`);
 
     socket.addEventListener('message', event => {
