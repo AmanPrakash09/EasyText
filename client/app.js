@@ -654,10 +654,10 @@ class ChatView {
     sendMessage() {
         const newMessage = this.inputElem.value.trim();
 
-        // if (newMessage) {
-        //     this.room.addMessage(profile.username, newMessage);
-        //     this.inputElem.value = '';
-        // }
+        if (newMessage) {
+            this.room.addMessage(profile.username, newMessage);
+            this.inputElem.value = '';
+        }
 
         const message = {
             roomId: this.room.id,
@@ -775,9 +775,9 @@ class Room {
         const message = { username, text };
         this.messages.push(message);
 
-        if (this.onNewMessage) {
-            this.onNewMessage(message);
-        }
+        // if (this.onNewMessage) {
+        //     this.onNewMessage(message);
+        // }
     }
 }
 
