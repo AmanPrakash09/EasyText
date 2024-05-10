@@ -802,7 +802,10 @@ class Lobby {
 
 function main() {
 
-    const socket = new WebSocket(`ws://${process.env.EC2_PublicIPv4}:8000`);
+    let hostname = new URL(Service.origin).hostname;
+    console.log(hostname);
+
+    const socket = new WebSocket(`ws://${hostname}:8000`);
 
     socket.addEventListener('message', event => {
         const message = JSON.parse(event.data);
