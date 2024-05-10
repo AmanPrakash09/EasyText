@@ -813,10 +813,11 @@ function main() {
 
     socket.addEventListener('message', event => {
         const message = JSON.parse(event.data);
-        const room = lobby.getRoom(message.roomId);
-        if (room) {
-            room.addMessage(message.username, message.text);
-        }
+        console.log("WebSocket received:", message);
+        // const room = lobby.getRoom(message.roomId);
+        // if (room) {
+        //     room.addMessage(message.username, message.text);
+        // }
     });
 
     const lobby = new Lobby();
