@@ -654,10 +654,10 @@ class ChatView {
     sendMessage() {
         const newMessage = this.inputElem.value.trim();
 
-        if (newMessage) {
-            this.room.addMessage(profile.username, newMessage);
-            this.inputElem.value = '';
-        }
+        // if (newMessage) {
+        //     this.room.addMessage(profile.username, newMessage);
+        //     this.inputElem.value = '';
+        // }
 
         const message = {
             roomId: this.room.id,
@@ -807,13 +807,13 @@ function main() {
 
     const socket = new WebSocket(`ws://${hostname}:8000`);
 
-    // socket.addEventListener('message', event => {
-    //     const message = JSON.parse(event.data);
-    //     const room = lobby.getRoom(message.roomId);
-    //     if (room) {
-    //         room.addMessage(message.username, message.text);
-    //     }
-    // });
+    socket.addEventListener('message', event => {
+        const message = JSON.parse(event.data);
+        const room = lobby.getRoom(message.roomId);
+        if (room) {
+            room.addMessage(message.username, message.text);
+        }
+    });
 
     const lobby = new Lobby();
 
