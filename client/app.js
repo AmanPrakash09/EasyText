@@ -670,6 +670,10 @@ class ChatView {
     setRoom(room) {
         console.log("Setting room:", room);
 
+        if (this.room && this.room.onNewMessage) {
+            this.room.onNewMessage = null;
+        }
+    
         this.room = room;
         this.titleElem.textContent = room.name;
 
