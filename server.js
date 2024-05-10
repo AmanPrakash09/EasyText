@@ -440,6 +440,6 @@ function isCorrectPassword(password, saltedHash) {
     return hash === originalHash;
 }
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
 	console.log(`${new Date()}  App Started. Listening on ${host}:${port}, serving ${clientApp}`);
 });
